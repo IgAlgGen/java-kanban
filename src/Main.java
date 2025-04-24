@@ -2,6 +2,7 @@
 public class Main {
 
     public static void main(String[] args) {
+
         Manager manager = new Manager();
         Task task1 = new Task("Task 1", "Description 1");
         Task task2 = new Task("Task 2", "Description 2");
