@@ -3,10 +3,11 @@ import java.util.List;
 import java.util.Objects;
 
 public class Epic extends Task {
-    private final List<Integer> subtaskIDs = new ArrayList<>();
+    private final List<Integer> subtaskIDs;
 
     protected Epic(int id, String name, String description, Status status) {
         super(id, name, description, status);
+        this.subtaskIDs = new ArrayList<>();
     }
 
     public List<Integer> getSubtaskIDs() {

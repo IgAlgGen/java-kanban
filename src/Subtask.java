@@ -2,6 +2,8 @@ import java.util.Objects;
 
 public class Subtask extends Task {
     private final int epicId;
+
+
     protected Subtask(int id, String name, String description, Status status, int epicId) {
         super(id, name, description, status);
         this.epicId = epicId;
