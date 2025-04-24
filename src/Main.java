@@ -120,7 +120,7 @@ public class Main {
             for (Task task : tasks) {
                 if (task == null) {
                     System.out.println("null");
-                }else {
+                } else {
                     System.out.println(task.getClass().getSimpleName() + " ID: " + task.getId() +
                             ", Name: " + task.getName() +
                             ", Description: " + task.getDescription() +

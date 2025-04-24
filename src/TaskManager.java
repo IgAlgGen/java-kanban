@@ -25,7 +25,6 @@ public class TaskManager {
 
     public void addTask(Task task) {
         task.id = generateId();
-        task.status = Status.NEW; // Устанавливаем статус по умолчанию
         tasks.put(task.id, task);
     }
 
