@@ -2,12 +2,14 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        TaskManager manager = new TaskManager();
+        TaskManager manager = Managers.getDefault();
 
         testTask(manager);
         testEpic(manager);
         testSubtask(manager);
 
+        System.out.println("_".repeat(20) + "Test History" + "_".repeat(20));
+            printList(manager.getFromHistory());
     }
 
     private static void testEpic(TaskManager manager) {
@@ -113,11 +115,11 @@ public class Main {
         printList(manager.getAllTasks());
     }
 
-    private static void printList(List<? extends Task> tasks) {
+    private static <T extends Task> void printList(List<T> tasks) {
         if (tasks.isEmpty()) {
             System.out.println("Список пуст");
         } else {
-            for (Task task : tasks) {
+            for (T task : tasks) {
                 if (task == null) {
                     System.out.println("null");
                 } else {
@@ -128,6 +130,5 @@ public class Main {
                 }
             }
         }
-
     }
 }
