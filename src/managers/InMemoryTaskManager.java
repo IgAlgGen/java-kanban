@@ -1,10 +1,40 @@
-import java.util.*;
+package managers;
 
+import model.Epic;
+import model.Subtask;
+import model.Task;
+import utils.Managers;
+import utils.Status;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static utils.IdGenerator.*;
+
+/**
+ * Я сначала делал обобщённый менеджер по типу задач:
+ *      public class InMemoryTaskManager<T extends Task> implements TaskManager<T>{
+ *      private final Map<Integer, T> storage = new HashMap<>();
+ *      и т.д.
+ *      }
+ * Удобство в повторно используемом коде для любых потомков Task и универсальности кода.
+ * Большое неудобство в том, что трудно управлять взаимосвязью, например между Epic и Subtask,
+ * потому что InMemoryTaskManager<Subtask> не знает, к какому Epic относится Subtask.
+ *
+ * Ну или я не придумал как реализовать.
+ *
+ *
+ * Оставил реализацию с не параметризованным интерфейсом, но отдельными методами.
+ *      Тут проще управлять связями между типами задач
+ *      Да, дублируется часть логики.
+ *      И да, не используются дженерики.
+ */
 public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, Task> tasks;
     private final Map<Integer, Epic> epics;
     private final Map<Integer, Subtask> subtasks;
-    private static int idCounter = 1;
     private final HistoryManager historyManager;
 
     public InMemoryTaskManager() {
@@ -14,9 +44,6 @@ public class InMemoryTaskManager implements TaskManager {
         this.historyManager = Managers.getDefaultHistory();
     }
 
-    private int generateId() {
-        return idCounter++;
-    }
     private void addToHistory(Task task) {
         historyManager.add(task);
     }
@@ -26,7 +53,7 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
-    //region Методы для Task
+    //region Методы для model.Task
     @Override
     public List<Task> getAllTasks() {
         return new ArrayList<>(tasks.values());
@@ -48,8 +75,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void addTask(Task task) {
-        task.id = generateId();
-        tasks.put(task.id, task);
+        task.setId(generateId());
+        tasks.put(task.getId(), task);
     }
 
     @Override
@@ -63,7 +90,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     //endregion
-    //region Методы для Epic
+    //region Методы для model.Epic
     @Override
     public List<Epic> getAllEpics() {
         return new ArrayList<>(epics.values());
@@ -86,8 +113,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void addEpic(Epic epic) {
-        epic.id = generateId();
-        epics.put(epic.id, epic);
+        epic.setId(generateId());
+        epics.put(epic.getId(), epic);
         updateEpicStatus(epic);
     }
 
@@ -113,7 +140,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     //endregion
-    //region Методы для Subtask
+    //region Методы для model.Subtask
     @Override
     public List<Subtask> getAllSubtasks() {
         return new ArrayList<>(subtasks.values());
@@ -138,11 +165,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void addSubtask(Subtask subtask) {
-        subtask.id = generateId();
-        subtasks.put(subtask.id, subtask);
+        subtask.setId(generateId());
+        subtasks.put(subtask.getId(), subtask);
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
-            epic.addSubtaskId(subtask.id);
+            epic.addSubtaskId(subtask.getId());
             updateEpicStatus(epic);
         }
     }

@@ -1,13 +1,20 @@
+package model;
+
+import utils.Status;
+
 import java.util.Objects;
 
 public class Subtask extends Task {
     private final int epicId;
 
-    protected Subtask(int id, String name, String description, Status status, int epicId) {
+    public Subtask(int id, String name, String description, Status status, int epicId) {
         super(id, name, description, status);
         this.epicId = epicId;
     }
 
+    public Subtask(String name, String description, Status status, int epicId) {
+        this(0, name, description, status, epicId);
+    }
     public int getEpicId() {
         return epicId;
     }

@@ -1,7 +1,13 @@
+package managers;
+
+import model.Epic;
+import model.Subtask;
+import model.Task;
+
 import java.util.List;
 
 public interface TaskManager {
-    //region Task
+    //region model.Task
     List<Task> getAllTasks();
 
     void removeAllTasks();
@@ -15,7 +21,7 @@ public interface TaskManager {
     void removeTaskById(int id);
     //endregion
 
-    //region Epic
+    //region model.Epic
     List<Epic> getAllEpics();
 
     void removeAllEpics();
@@ -29,7 +35,7 @@ public interface TaskManager {
     void removeEpicById(int id);
     //endregion
 
-    //region Subtask
+    //region model.Subtask
     List<Subtask> getAllSubtasks();
 
     void removeAllSubtasks();
