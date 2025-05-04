@@ -1,62 +1,124 @@
-import java.util.*;
+package managers;
 
-public class TaskManager {
-    private final Map<Integer, Task> tasks = new HashMap<>();
-    private final Map<Integer, Epic> epics = new HashMap<>();
-    private final Map<Integer, Subtask> subtasks = new HashMap<>();
-    private static int idCounter = 1;
+import model.Epic;
+import model.Subtask;
+import model.Task;
+import utils.Managers;
+import utils.Status;
 
-    private int generateId() {
-        return idCounter++;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static utils.IdGenerator.*;
+
+/**
+ * Я сначала делал обобщённый менеджер по типу задач:
+ *      public class InMemoryTaskManager<T extends Task> implements TaskManager<T>{
+ *      private final Map<Integer, T> storage = new HashMap<>();
+ *      и т.д.
+ *      }
+ * Удобство в повторно используемом коде для любых потомков Task и универсальности кода.
+ * Большое неудобство в том, что трудно управлять взаимосвязью, например между Epic и Subtask,
+ * потому что InMemoryTaskManager<Subtask> не знает, к какому Epic относится Subtask.
+ *
+ * Ну или я не придумал как реализовать.
+ *
+ *
+ * Оставил реализацию с не параметризованным интерфейсом, но отдельными методами.
+ *      Тут проще управлять связями между типами задач
+ *      Да, дублируется часть логики.
+ *      И да, не используются дженерики.
+ */
+public class InMemoryTaskManager implements TaskManager {
+    private final Map<Integer, Task> tasks;
+    private final Map<Integer, Epic> epics;
+    private final Map<Integer, Subtask> subtasks;
+    private final HistoryManager historyManager;
+
+    public InMemoryTaskManager() {
+        this.tasks = new HashMap<>();
+        this.epics = new HashMap<>();
+        this.subtasks = new HashMap<>();
+        this.historyManager = Managers.getDefaultHistory();
     }
 
-    //region Методы для Task
+    private void addToHistory(Task task) {
+        historyManager.add(task);
+    }
+
+    @Override
+    public List<Task> getFromHistory() {
+        return historyManager.getHistory();
+    }
+
+    //region Методы для model.Task
+    @Override
     public List<Task> getAllTasks() {
         return new ArrayList<>(tasks.values());
     }
 
+    @Override
     public void removeAllTasks() {
         tasks.clear();
     }
 
+    @Override
     public Task getTaskById(int id) {
-        return tasks.get(id);
+        Task task = tasks.get(id);
+        if (task != null) {
+            addToHistory(task);
+        }
+        return task;
     }
 
+    @Override
     public void addTask(Task task) {
-        task.id = generateId();
-        tasks.put(task.id, task);
+        task.setId(generateId());
+        tasks.put(task.getId(), task);
     }
 
+    @Override
     public void updateTask(Task task) {
         tasks.put(task.getId(), task);
     }
 
+    @Override
     public void removeTaskById(int id) {
         tasks.remove(id);
     }
-    //endregion
 
-    //region Методы для Epic
+    //endregion
+    //region Методы для model.Epic
+    @Override
     public List<Epic> getAllEpics() {
         return new ArrayList<>(epics.values());
     }
 
+    @Override
     public void removeAllEpics() {
         epics.clear();
         subtasks.clear(); // Подзадачи эпиков тоже удаляются
     }
 
+    @Override
     public Epic getEpicById(int id) {
-        return epics.get(id);
+        Epic epic = epics.get(id);
+        if (epic != null) {
+            addToHistory(epic);
+        }
+        return epic;
     }
 
+    @Override
     public void addEpic(Epic epic) {
-        epic.id = generateId();
-        epics.put(epic.id, epic);
+        epic.setId(generateId());
+        epics.put(epic.getId(), epic);
         updateEpicStatus(epic);
     }
 
+    @Override
     public void updateEpic(Epic epic) {
         Epic oldEpic = epics.get(epic.getId());
         if (oldEpic != null) {
@@ -67,6 +129,7 @@ public class TaskManager {
         }
     }
 
+    @Override
     public void removeEpicById(int id) {
         Epic epic = epics.remove(id);
         if (epic != null) {
@@ -75,13 +138,15 @@ public class TaskManager {
             }
         }
     }
-    //endregion
 
-    //region Методы для Subtask
+    //endregion
+    //region Методы для model.Subtask
+    @Override
     public List<Subtask> getAllSubtasks() {
         return new ArrayList<>(subtasks.values());
     }
 
+    @Override
     public void removeAllSubtasks() {
         for (Epic epic : epics.values()) {
             epic.clearSubtaskIds();
@@ -89,20 +154,27 @@ public class TaskManager {
         subtasks.clear();
     }
 
+    @Override
     public Subtask getSubtaskById(int id) {
-        return subtasks.get(id);
+        Subtask subtask = subtasks.get(id);
+        if (subtask != null) {
+            addToHistory(subtask);
+        }
+        return subtask;
     }
 
+    @Override
     public void addSubtask(Subtask subtask) {
-        subtask.id = generateId();
-        subtasks.put(subtask.id, subtask);
+        subtask.setId(generateId());
+        subtasks.put(subtask.getId(), subtask);
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
-            epic.addSubtaskId(subtask.id);
+            epic.addSubtaskId(subtask.getId());
             updateEpicStatus(epic);
         }
     }
 
+    @Override
     public void updateSubtask(Subtask subtask) {
         subtasks.put(subtask.getId(), subtask);
         Epic epic = epics.get(subtask.getEpicId());
@@ -111,6 +183,7 @@ public class TaskManager {
         }
     }
 
+    @Override
     public void removeSubtaskById(int id) {
         Subtask subtask = subtasks.remove(id);
         if (subtask != null) {
@@ -122,6 +195,7 @@ public class TaskManager {
         }
     }
 
+    @Override
     public List<Subtask> getSubtasksOfEpic(int epicId) {
         List<Subtask> result = new ArrayList<>();
         Epic epic = epics.get(epicId);
@@ -132,6 +206,7 @@ public class TaskManager {
         }
         return result;
     }
+
     //endregion
 
     private void updateEpicStatus(Epic epic) {

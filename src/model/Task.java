@@ -1,21 +1,33 @@
+package model;
+
+import utils.Status;
+
 import java.util.Objects;
 
 public class Task {
-    protected int id;
+    private int id;
     protected String name;
     protected String description;
     protected Status status;
 
-    protected Task(int id, String name, String description, Status status) {
+    public Task(int id, String name, String description, Status status) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.status = status;
     }
 
+    public Task(String name, String description, Status status) {
+        this(0, name, description, status);
+    }
+
     // Геттеры и сеттеры
     public int getId() {
         return id;
+    }
+
+    public void setId(int i) {
+        this.id = i;
     }
 
     public Status getStatus() {
@@ -33,8 +45,8 @@ public class Task {
     public String getDescription() {
         return description;
     }
-
     // equals и hashCode
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
