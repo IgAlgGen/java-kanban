@@ -5,7 +5,7 @@ import managers.InMemoryHistoryManager;
 import managers.InMemoryTaskManager;
 import managers.TaskManager;
 
-final class Managers {
+public final class Managers {
     private Managers() {
         // Частный конструктор для предотвращения экземпляров
     }

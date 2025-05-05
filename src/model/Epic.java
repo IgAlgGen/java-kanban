@@ -13,6 +13,7 @@ public class Epic extends Task {
         super(id, name, description, status);
         this.subtaskIDs = new ArrayList<>();
     }
+
     public Epic(String name, String description, Status status) {
         this(0, name, description, status);
     }
