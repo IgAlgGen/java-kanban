@@ -21,17 +21,17 @@ public class Main {
         manager.updateTask(new Task(1, "Updated Task 1", "Updated Description 1", Status.IN_PROGRESS));
         manager.addTask(new Task(1, "Updated Task 1", "Updated Description 1", Status.IN_PROGRESS));
 
-//        System.out.println(manager.getTaskById(1));
-//        System.out.println(manager.getEpicById(3));
-//        System.out.println(manager.getSubtaskById(6));
+        System.out.println(manager.getTaskById(1));
+        System.out.println(manager.getEpicById(3));
+        System.out.println(manager.getSubtaskById(6));
 
         printList(manager.getAllTasks());
-//        printList(manager.getAllEpics());
-//        printList(manager.getAllSubtasks());
-//        printList(manager.getSubtasksOfEpic(3));
+        printList(manager.getAllEpics());
+        printList(manager.getAllSubtasks());
+        printList(manager.getSubtasksOfEpic(3));
 
-//        System.out.println("_".repeat(20) + "Test History" + "_".repeat(20));
-//        printList(manager.getFromHistory());
+        System.out.println("_".repeat(20) + "Test History" + "_".repeat(20));
+        printList(manager.getFromHistory());
     }
 
 

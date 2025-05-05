@@ -1,6 +1,6 @@
 package utils;
 
-public class IdGenerator {
+public final class IdGenerator {
     private static int idCounter = 1;
 
     private IdGenerator() {
