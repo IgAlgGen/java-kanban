@@ -22,10 +22,9 @@ import static utils.IdGenerator.*;
  * Удобство в повторно используемом коде для любых потомков Task и универсальности кода.
  * Большое неудобство в том, что трудно управлять взаимосвязью, например между Epic и Subtask,
  * потому что InMemoryTaskManager<Subtask> не знает, к какому Epic относится Subtask.
- *
+
  * Ну или я не придумал как реализовать.
- *
- *
+
  * Оставил реализацию с не параметризованным интерфейсом, но отдельными методами.
  *      Тут проще управлять связями между типами задач
  *      Да, дублируется часть логики.
@@ -61,6 +60,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllTasks() {
+        for (Task task : tasks.values()) {
+            historyManager.remove(task.getId()); // Удаляем задачи из истории
+        }
         tasks.clear();
     }
 
@@ -86,6 +88,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeTaskById(int id) {
+        historyManager.remove(id); // Удаляем задачу из истории
         tasks.remove(id);
     }
 
@@ -98,8 +101,16 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllEpics() {
-        epics.clear();
+        for (Epic epic : epics.values()) {
+            for (Integer subtaskId : epic.getSubtaskIDs()) {
+                historyManager.remove(subtaskId); // Удаляем подзадачи из истории
+            }
+            historyManager.remove(epic.getId()); // Удаляем эпики из истории
+        }
+        epics.clear(); // Эпики удаляются
         subtasks.clear(); // Подзадачи эпиков тоже удаляются
+
+
     }
 
     @Override
@@ -133,7 +144,9 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeEpicById(int id) {
         Epic epic = epics.remove(id);
         if (epic != null) {
+            historyManager.remove(epic.getId()); // Удаляем эпик из истории
             for (Integer subId : epic.getSubtaskIDs()) {
+                historyManager.remove(subId); // Удаляем подзадачи из истории
                 subtasks.remove(subId);
             }
         }
@@ -186,6 +199,8 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeSubtaskById(int id) {
         Subtask subtask = subtasks.remove(id);
+        historyManager.remove(id); // Удаляем подзадачу из истории
+         // Удаляем подзадачу из эпика, если она была привязана к нему
         if (subtask != null) {
             Epic epic = epics.get(subtask.getEpicId());
             if (epic != null) {
