@@ -15,6 +15,7 @@ public class Subtask extends Task {
     public Subtask(String name, String description, Status status, int epicId) {
         this(0, name, description, status, epicId);
     }
+
     public int getEpicId() {
         return epicId;
     }

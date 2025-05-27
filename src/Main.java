@@ -14,24 +14,29 @@ public class Main {
         manager.addTask(new Task("Task 1", "Description 1", Status.NEW));
         manager.addTask(new Task("Task 2", "Description 2", Status.NEW));
         manager.addEpic(new Epic("Epic 1", "Description 1", Status.NEW));
-        manager.addSubtask(new Subtask("Subtask 1", "Description 1", Status.DONE, 3));
-        manager.addSubtask(new Subtask("Subtask 2", "Description 2", Status.DONE, 3));
-        manager.addSubtask(new Subtask("Subtask 3", "Description 3", Status.DONE, 3));
+        manager.addEpic(new Epic("Epic 2", "Description 2", Status.NEW));
+        manager.addSubtask(new Subtask("Subtask 1", "Description 1", Status.NEW, 4));
+        manager.addSubtask(new Subtask("Subtask 2", "Description 2", Status.NEW, 4));
+        manager.addSubtask(new Subtask("Subtask 3", "Description 3", Status.NEW, 4));
 
-        manager.updateTask(new Task(1, "Updated Task 1", "Updated Description 1", Status.IN_PROGRESS));
-        manager.addTask(new Task(1, "Updated Task 1", "Updated Description 1", Status.IN_PROGRESS));
+        manager.getTaskById(1);
+        manager.getEpicById(3);
+        manager.getEpicById(4);
+        manager.getSubtaskById(5);
+        manager.getSubtaskById(6);
 
-        System.out.println(manager.getTaskById(1));
-        System.out.println(manager.getEpicById(3));
-        System.out.println(manager.getSubtaskById(6));
-
-        printList(manager.getAllTasks());
-        printList(manager.getAllEpics());
-        printList(manager.getAllSubtasks());
-        printList(manager.getSubtasksOfEpic(3));
-
-        System.out.println("_".repeat(20) + "Test History" + "_".repeat(20));
         printList(manager.getFromHistory());
+
+        System.out.println("_" + "_".repeat(20) + "Test History" + "_" + "_".repeat(20));
+        manager.getEpicById(3);
+        manager.removeSubtaskById(5);
+        printList(manager.getFromHistory());
+
+        System.out.println("_" + "_".repeat(20) + "Test History" + "_" + "_".repeat(20));
+        manager.removeEpicById(4);
+        manager.removeTaskById(1);
+        printList(manager.getFromHistory());
+
     }
 
 
@@ -46,7 +51,7 @@ public class Main {
                     System.out.println(task.getClass().getSimpleName() + " ID: " + task.getId() +
                             ", Name: " + task.getName() +
                             ", Description: " + task.getDescription() +
-                            ", utils.Status: " + task.getStatus());
+                            ", Status: " + task.getStatus());
                 }
             }
         }
