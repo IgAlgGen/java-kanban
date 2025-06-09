@@ -5,12 +5,14 @@ import utils.Managers;
 import utils.Status;
 import managers.TaskManager;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) {
-        TaskManager manager = Managers.getDefault();
+        Path filePath = Path.of("tasks.csv");
+        TaskManager manager = Managers.getFileBackedTaskManager(filePath);
         manager.addTask(new Task("Task 1", "Description 1", Status.NEW));
         manager.addTask(new Task("Task 2", "Description 2", Status.NEW));
         manager.addEpic(new Epic("Epic 1", "Description 1", Status.NEW));
@@ -19,26 +21,29 @@ public class Main {
         manager.addSubtask(new Subtask("Subtask 2", "Description 2", Status.NEW, 4));
         manager.addSubtask(new Subtask("Subtask 3", "Description 3", Status.NEW, 4));
 
+        printList(manager.getAllTasks());
+        printList(manager.getAllEpics());
+        printList(manager.getAllSubtasks());
+
         manager.getTaskById(1);
         manager.getEpicById(3);
         manager.getEpicById(4);
         manager.getSubtaskById(5);
         manager.getSubtaskById(6);
 
-        printList(manager.getFromHistory());
+        //printList(manager.getFromHistory());
 
         System.out.println("_" + "_".repeat(20) + "Test History" + "_" + "_".repeat(20));
         manager.getEpicById(3);
         manager.removeSubtaskById(5);
         printList(manager.getFromHistory());
 
-        System.out.println("_" + "_".repeat(20) + "Test History" + "_" + "_".repeat(20));
-        manager.removeEpicById(4);
-        manager.removeTaskById(1);
-        printList(manager.getFromHistory());
+//        System.out.println("_" + "_".repeat(20) + "Test History" + "_" + "_".repeat(20));
+//        manager.removeEpicById(4);
+//        manager.removeTaskById(1);
+//        printList(manager.getFromHistory());
 
     }
-
 
     private static void printList(List<? extends Task> tasks) {
         if (tasks.isEmpty()) {
