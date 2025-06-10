@@ -15,20 +15,20 @@ import static utils.IdGenerator.*;
 
 /**
  * Я сначала делал обобщённый менеджер по типу задач:
- *      public class InMemoryTaskManager<T extends Task> implements TaskManager<T>{
- *      private final Map<Integer, T> storage = new HashMap<>();
- *      и т.д.
- *      }
+ * public class InMemoryTaskManager<T extends Task> implements TaskManager<T>{
+ * private final Map<Integer, T> storage = new HashMap<>();
+ * и т.д.
+ * }
  * Удобство в повторно используемом коде для любых потомков Task и универсальности кода.
  * Большое неудобство в том, что трудно управлять взаимосвязью, например между Epic и Subtask,
  * потому что InMemoryTaskManager<Subtask> не знает, к какому Epic относится Subtask.
-
+ * <p>
  * Ну или я не придумал как реализовать.
-
+ * <p>
  * Оставил реализацию с не параметризованным интерфейсом, но отдельными методами.
- *      Тут проще управлять связями между типами задач
- *      Да, дублируется часть логики.
- *      И да, не используются дженерики.
+ * Тут проще управлять связями между типами задач
+ * Да, дублируется часть логики.
+ * И да, не используются дженерики.
  */
 public class InMemoryTaskManager implements TaskManager {
     final Map<Integer, Task> tasks;
@@ -200,7 +200,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeSubtaskById(int id) {
         Subtask subtask = subtasks.remove(id);
         historyManager.remove(id); // Удаляем подзадачу из истории
-         // Удаляем подзадачу из эпика, если она была привязана к нему
+        // Удаляем подзадачу из эпика, если она была привязана к нему
         if (subtask != null) {
             Epic epic = epics.get(subtask.getEpicId());
             if (epic != null) {

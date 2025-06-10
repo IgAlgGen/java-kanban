@@ -15,7 +15,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Locale;
 
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -62,22 +61,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     continue; // пропускаем заголовок и пустые строки
                 }
                 Task task = fromString(line);
-                switch (task.getType().toUpperCase()) {
-                    case "TASK":
-                        manager.tasks.put(task.getId(), task);
-                        break;
-                    case "EPIC":
-                        Epic epic = (Epic) task;
-                        manager.epics.put(epic.getId(), epic);
-                        break;
-                    case "SUBTASK":
-                        Subtask subtask = (Subtask) task;
-                        manager.subtasks.put(subtask.getId(), subtask);
-                        // добавим подзадачу в эпик
-                        manager.epics.get(subtask.getEpicId()).addSubtaskId(subtask.getId());
-                        // обновляем статус эпика
-                        manager.updateEpicStatus(manager.epics.get(subtask.getEpicId()));
-                        break;
+                if (task instanceof Epic epic) {
+                    manager.epics.put(epic.getId(), epic);
+                } else if (task instanceof Subtask subtask) {
+                    manager.subtasks.put(subtask.getId(), subtask);
+                    manager.epics.get(subtask.getEpicId()).addSubtaskId(subtask.getId());// добавим подзадачу в эпик
+                    manager.updateEpicStatus(manager.epics.get(subtask.getEpicId()));// обновляем статус эпика
+                } else {
+                    manager.tasks.put(task.getId(), task);
                 }
                 IdGenerator.updateMaxId(task.getId()); // чтобы не повторялись ID
 
@@ -104,9 +95,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 int epicId = Integer.parseInt(fields[5]);
                 yield new Subtask(id, name, description, status, epicId);
             }
-            default -> throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         };
     }
+
     //region Методы переопределенные из InMemoryTaskManager
     @Override
     public void addTask(Task task) {
