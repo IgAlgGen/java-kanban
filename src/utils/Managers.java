@@ -1,9 +1,8 @@
 package utils;
 
-import managers.HistoryManager;
-import managers.InMemoryHistoryManager;
-import managers.InMemoryTaskManager;
-import managers.TaskManager;
+import managers.*;
+
+import java.nio.file.Path;
 
 public final class Managers {
     private Managers() {
@@ -16,5 +15,9 @@ public final class Managers {
 
     public static HistoryManager getDefaultHistory() {
         return new InMemoryHistoryManager();
+    }
+
+    public static FileBackedTaskManager getFileBackedTaskManager(Path filePath) {
+        return new FileBackedTaskManager(filePath.toFile());
     }
 }
