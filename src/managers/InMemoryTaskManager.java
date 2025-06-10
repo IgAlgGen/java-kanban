@@ -31,9 +31,9 @@ import static utils.IdGenerator.*;
  *      И да, не используются дженерики.
  */
 public class InMemoryTaskManager implements TaskManager {
-    private final Map<Integer, Task> tasks;
-    private final Map<Integer, Epic> epics;
-    private final Map<Integer, Subtask> subtasks;
+    final Map<Integer, Task> tasks;
+    final Map<Integer, Epic> epics;
+    final Map<Integer, Subtask> subtasks;
     private final HistoryManager historyManager;
 
     public InMemoryTaskManager() {
@@ -224,7 +224,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     //endregion
 
-    private void updateEpicStatus(Epic epic) {
+    void updateEpicStatus(Epic epic) {
         List<Integer> subtaskIds = epic.getSubtaskIDs();
         if (subtaskIds.isEmpty()) {
             epic.setStatus(Status.NEW);

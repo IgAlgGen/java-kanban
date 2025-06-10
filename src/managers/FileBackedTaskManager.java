@@ -1,14 +1,22 @@
 package managers;
 
+import exeptions.ManagerLoadException;
 import exeptions.ManagerSaveException;
 import model.Epic;
 import model.Subtask;
 import model.Task;
 
+import utils.IdGenerator;
+import utils.Status;
+import utils.TaskType;
+
 import java.io.BufferedWriter;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Locale;
+
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
@@ -43,6 +51,61 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } catch (IOException e) {
             throw new ManagerSaveException("Ошибка сохранения в файл", e);
         }
+    }
+
+    public static FileBackedTaskManager loadFromFile(File file) {
+        FileBackedTaskManager manager = new FileBackedTaskManager(file);
+        try (BufferedReader reader = new BufferedReader(new java.io.FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty() || line.startsWith("id,type,name,status,description,epic")) {
+                    continue; // пропускаем заголовок и пустые строки
+                }
+                Task task = fromString(line);
+                switch (task.getType().toUpperCase()) {
+                    case "TASK":
+                        manager.tasks.put(task.getId(), task);
+                        break;
+                    case "EPIC":
+                        Epic epic = (Epic) task;
+                        manager.epics.put(epic.getId(), epic);
+                        break;
+                    case "SUBTASK":
+                        Subtask subtask = (Subtask) task;
+                        manager.subtasks.put(subtask.getId(), subtask);
+                        // добавим подзадачу в эпик
+                        manager.epics.get(subtask.getEpicId()).addSubtaskId(subtask.getId());
+                        // обновляем статус эпика
+                        manager.updateEpicStatus(manager.epics.get(subtask.getEpicId()));
+                        break;
+                }
+                IdGenerator.updateMaxId(task.getId()); // чтобы не повторялись ID
+
+            }
+        } catch (IOException e) {
+            throw new ManagerLoadException("Ошибка загрузки из файла", e);
+        }
+        return manager;
+    }
+
+    private static Task fromString(String line) {
+        String[] fields = line.split(",");
+
+        int id = Integer.parseInt(fields[0]);
+        TaskType type = TaskType.taskTypeFromString(fields[1]);
+        String name = fields[2];
+        Status status = Status.statusFromString(fields[3]);
+        String description = fields[4];
+
+        return switch (type) {
+            case TASK -> new Task(id, name, description, status);
+            case EPIC -> new Epic(id, name, description, status);
+            case SUBTASK -> {
+                int epicId = Integer.parseInt(fields[5]);
+                yield new Subtask(id, name, description, status, epicId);
+            }
+            default -> throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
+        };
     }
     //region Методы переопределенные из InMemoryTaskManager
     @Override
