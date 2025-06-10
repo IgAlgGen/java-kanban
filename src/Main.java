@@ -24,6 +24,7 @@ public class Main {
         System.out.println("_" + "_".repeat(20) + "Test TaskManager" + "_" + "_".repeat(20));
         manager.addTask(new Task("Task 1", "Description 1", Status.DONE));
         manager.addTask(new Task("Task 2", "Description 2", Status.DONE));
+        manager.addEpic(new Epic("Epic 1", "Description 1", Status.DONE));
 
         printList(manager.getAllTasks());
         printList(manager.getAllEpics());
