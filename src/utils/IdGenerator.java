@@ -10,10 +10,4 @@ public final class IdGenerator {
     public static int generateId() {
         return idCounter++;
     }
-
-    public static void updateMaxId(int maxId) {
-        if (maxId >= idCounter) {
-            idCounter = maxId + 1;
-        }
-    }
 }
