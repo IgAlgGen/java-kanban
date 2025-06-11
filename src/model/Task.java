@@ -22,6 +22,9 @@ public class Task {
     }
 
     // Геттеры и сеттеры
+    public String getType() {
+        return getClass().getSimpleName();
+    }
     public int getId() {
         return id;
     }
