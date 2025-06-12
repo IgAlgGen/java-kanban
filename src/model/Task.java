@@ -25,7 +25,7 @@ public class Task {
     public String getType() {
         return getClass().getSimpleName();
     }
-    
+
     public int getId() {
         return id;
     }
