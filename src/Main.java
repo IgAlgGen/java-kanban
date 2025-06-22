@@ -5,38 +5,25 @@ import utils.Managers;
 import utils.Status;
 import managers.TaskManager;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) {
         TaskManager manager = Managers.getDefault();
-        manager.addTask(new Task("Task 1", "Description 1", Status.NEW));
-        manager.addTask(new Task("Task 2", "Description 2", Status.NEW));
-        manager.addEpic(new Epic("Epic 1", "Description 1", Status.NEW));
-        manager.addEpic(new Epic("Epic 2", "Description 2", Status.NEW));
-        manager.addSubtask(new Subtask("Subtask 1", "Description 1", Status.NEW, 4));
-        manager.addSubtask(new Subtask("Subtask 2", "Description 2", Status.NEW, 4));
-        manager.addSubtask(new Subtask("Subtask 3", "Description 3", Status.NEW, 4));
+        manager.addTask(new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(90)));
 
-        manager.getTaskById(1);
-        manager.getEpicById(3);
-        manager.getEpicById(4);
-        manager.getSubtaskById(5);
-        manager.getSubtaskById(6);
+//        manager.addTask(new Task("Task 2", "Description 2", Status.NEW));
+//        manager.addEpic(new Epic("Epic 1", "Description 1", Status.NEW));
+//        manager.addEpic(new Epic("Epic 2", "Description 2", Status.NEW));
+//        manager.addSubtask(new Subtask("Subtask 1", "Description 1", Status.NEW, 4));
+//        manager.addSubtask(new Subtask("Subtask 2", "Description 2", Status.NEW, 4));
+//        manager.addSubtask(new Subtask("Subtask 3", "Description 3", Status.NEW, 4));
 
-        printList(manager.getFromHistory());
-
-        System.out.println("_" + "_".repeat(20) + "Test History" + "_" + "_".repeat(20));
-        manager.getEpicById(3);
-        manager.removeSubtaskById(5);
-        printList(manager.getFromHistory());
-
-        System.out.println("_" + "_".repeat(20) + "Test History" + "_" + "_".repeat(20));
-        manager.removeEpicById(4);
-        manager.removeTaskById(1);
-        printList(manager.getFromHistory());
-
+        System.out.println("All tasks:");
+        printList(manager.getAllTasks());
     }
 
 

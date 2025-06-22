@@ -159,10 +159,16 @@ public class InMemoryTaskManager implements TaskManager {
         return new ArrayList<>(subtasks.values());
     }
 
+    /**
+     * Удаляет все подзадачи из менеджера.
+     * Очищает списки ID подзадач у всех эпиков и пересчитывает их временные параметры.
+     * После этого полностью очищает хранилище подзадач.
+     */
     @Override
     public void removeAllSubtasks() {
         for (Epic epic : epics.values()) {
-            epic.clearSubtaskIds();
+            epic.clearSubtaskIds(); // Очищаем список ID подзадач в эпиках
+            epic.recalculateEpicTimeDetails(getSubtasksOfEpic(epic.getId())); // Пересчитываем временные параметры эпика
         }
         subtasks.clear();
     }
@@ -176,6 +182,14 @@ public class InMemoryTaskManager implements TaskManager {
         return subtask;
     }
 
+    /**
+     * Добавляет новую подзадачу в менеджер.
+     * Генерирует уникальный идентификатор для подзадачи, сохраняет её в хранилище,
+     * добавляет идентификатор подзадачи в соответствующий эпик, обновляет статус эпика
+     * и пересчитывает его временные параметры.
+     *
+     * @param subtask подзадача для добавления
+     */
     @Override
     public void addSubtask(Subtask subtask) {
         subtask.setId(generateId());
@@ -183,16 +197,25 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
             epic.addSubtaskId(subtask.getId());
-            updateEpicStatus(epic);
+            updateEpicStatus(epic); // Обновляем статус эпика после добавления подзадачи
+            epic.recalculateEpicTimeDetails(getSubtasksOfEpic(epic.getId())); // Пересчитываем временные параметры эпика
         }
     }
 
+    /**
+     * Обновляет существующую подзадачу в менеджере.
+     * Заменяет подзадачу в хранилище, обновляет статус связанного эпика
+     * и пересчитывает временные параметры эпика на основе его подзадач.
+     *
+     * @param subtask подзадача для обновления
+     */
     @Override
     public void updateSubtask(Subtask subtask) {
         subtasks.put(subtask.getId(), subtask);
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
-            updateEpicStatus(epic);
+            updateEpicStatus(epic); // Обновляем статус эпика после изменения подзадачи
+            epic.recalculateEpicTimeDetails(getSubtasksOfEpic(epic.getId())); // Пересчитываем временные параметры эпика
         }
     }
 
