@@ -32,7 +32,7 @@ class FileBackedTaskManagerTest {
 
     @Test
     void saveToFile_writesTasksToFile() throws IOException {
-        Task task = new Task(1, "Test Task", "Description", Status.NEW);
+        Task task = new Task("Test Task", "Description", Status.NEW, null, null);
         manager.addTask(task);
 
         // Проверяем, что файл содержит строку задачи
@@ -40,6 +40,7 @@ class FileBackedTaskManagerTest {
         assertTrue(content.contains("Test Task"));
         assertTrue(content.contains("Description"));
         assertTrue(content.contains("NEW"));
+
     }
 
 
@@ -47,14 +48,16 @@ class FileBackedTaskManagerTest {
     void loadFromFile_loadsTasksFromFile() throws IOException {
         // Сохраняем задачу в файл
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
-            writer.write("id,type,name,status,description,epic\n");
-            writer.write("1,TASK,Test Task,NEW,Description,\n");
+            writer.write("id,type,name,status,description,startTime,duration,epic\n");
+            writer.write("1,TASK,Test Task,NEW,Description,2025-01-01T18:00,30,0\n");
             writer.newLine();
         }
 
         // Загружаем задачи из файла
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-        assertEquals(1, loadedManager.getAllTasks().size());
-        assertEquals("Test Task", loadedManager.getAllTasks().get(0).getName());
+        Task loadedTask = loadedManager.getTaskById(1);
+        assertEquals("Test Task", loadedTask.getName(), "Загруженная задача должна иметь правильное имя");
+        assertEquals("Description", loadedTask.getDescription(), "Загруженная задача должна иметь правильное описание");
+
     }
 }

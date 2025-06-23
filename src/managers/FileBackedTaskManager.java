@@ -10,6 +10,8 @@ import utils.Status;
 import utils.TaskType;
 
 import java.io.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -23,7 +25,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     // метод автосохранения
     protected void saveToFile() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write("id,type,name,status,description,epic,startTime,duration\n");
+            writer.write("id,type,name,status,description,startTime,duration,epic\n");
 
             for (Task task : getAllTasks()) {
                 writer.write(toString(task));
@@ -52,7 +54,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         try (BufferedReader reader = new BufferedReader(new java.io.FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.isEmpty() || line.startsWith("id,type,name,status,description,epic")) {
+                if (line.isEmpty() || line.startsWith("id,type,name,status,description,startTime,duration,epic")) {
                     continue; // пропускаем заголовок и пустые строки
                 }
                 Task task = fromString(line);
@@ -76,21 +78,44 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private static Task fromString(String line) {
         String[] fields = line.split(",");
+        if (fields.length < 5 || fields.length > 8) {
+            throw new IllegalArgumentException("Неверный формат строки: " + line);
+        }
 
+        // Преобразуем поля в соответствующие типы
         int id = Integer.parseInt(fields[0]);
         TaskType type = TaskType.taskTypeFromString(fields[1]);
         String name = fields[2];
         Status status = Status.statusFromString(fields[3]);
         String description = fields[4];
+        String startTimeStr = fields[5].equals("null") ? null : fields[5];
+        LocalDateTime startTime = startTimeStr != null ? LocalDateTime.parse(startTimeStr) : null;
+        String durationStr = fields[6];
+        Long duration = durationStr != null? Long.parseLong(fields[6]) : 0L;
+
+
 
         return switch (type) {
-            case TASK -> new Task(id, name, description, status);
-            case EPIC -> new Epic(id, name, description, status);
+            case TASK -> new Task(id, name, description, status, startTime, Duration.ofMinutes(duration));
+            case EPIC -> new Epic(id, name, description, status, startTime, Duration.ofMinutes(duration));
             case SUBTASK -> {
-                int epicId = Integer.parseInt(fields[5]);
-                yield new Subtask(id, name, description, status, epicId);
+                int epicId = Integer.parseInt(fields[7]);
+                yield new Subtask(id, name, description, status, startTime,Duration.ofMinutes(duration), epicId);
             }
         };
+    }
+
+    private String toString(Task task) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(task.getId()).append(",");
+        sb.append(task.getType()).append(",");
+        sb.append(task.getName()).append(",");
+        sb.append(task.getStatus()).append(",");
+        sb.append(task.getDescription()).append(",");
+        sb.append(task.getStartTime() != null ? task.getStartTime().toString() : "null").append(",");
+        sb.append(task.getDuration() != null ? task.getDuration().toMinutes() : "0").append(",");
+        sb.append(task instanceof Subtask ? ((Subtask) task).getEpicId() : "");
+        return sb.toString();
     }
 
     //region Методы переопределенные из InMemoryTaskManager
@@ -148,18 +173,4 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         saveToFile();
     }
     //endregion
-
-    private String toString(Task task) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(task.getId()).append(",");
-        sb.append(task.getType()).append(",");
-        sb.append(task.getName()).append(",");
-        sb.append(task.getStatus()).append(",");
-        sb.append(task.getDescription()).append(",");
-        if (task instanceof Subtask) {
-            sb.append(((Subtask) task).getEpicId());
-        }
-        return sb.toString();
-    }
-
 }

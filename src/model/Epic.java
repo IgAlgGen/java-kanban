@@ -12,13 +12,13 @@ public class Epic extends Task {
     private final List<Integer> subtaskIDs;
     private LocalDateTime endTime; //Дата и время окончания выполнения задачи
 
-    public Epic(int id, String name, String description, Status status, Duration duration, LocalDateTime startTime) {
+    public Epic(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration) {
         super(id, name, description, status, startTime, duration);
         this.subtaskIDs = new ArrayList<>();
     }
 
     public Epic(String name, String description, Status status, Duration duration, LocalDateTime startTime) {
-        this(0, name, description, status, duration, startTime);
+        this(0, name, description, status, startTime, duration);
     }
 
     public List<Integer> getSubtaskIDs() {

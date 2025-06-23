@@ -15,23 +15,6 @@ import java.util.Map;
 
 import static utils.IdGenerator.*;
 
-/**
- * Я сначала делал обобщённый менеджер по типу задач:
- *      public class InMemoryTaskManager<T extends Task> implements TaskManager<T>{
- *      private final Map<Integer, T> storage = new HashMap<>();
- *      и т.д.
- *      }
- * Удобство в повторно используемом коде для любых потомков Task и универсальности кода.
- * Большое неудобство в том, что трудно управлять взаимосвязью, например между Epic и Subtask,
- * потому что InMemoryTaskManager<Subtask> не знает, к какому Epic относится Subtask.
-
- * Ну или я не придумал как реализовать.
-
- * Оставил реализацию с не параметризованным интерфейсом, но отдельными методами.
- *      Тут проще управлять связями между типами задач
- *      Да, дублируется часть логики.
- *      И да, не используются дженерики.
- */
 public class InMemoryTaskManager implements TaskManager {
     final Map<Integer, Task> tasks;
     final Map<Integer, Epic> epics;
@@ -111,8 +94,6 @@ public class InMemoryTaskManager implements TaskManager {
         }
         epics.clear(); // Эпики удаляются
         subtasks.clear(); // Подзадачи эпиков тоже удаляются
-
-
     }
 
     @Override
@@ -249,7 +230,6 @@ public class InMemoryTaskManager implements TaskManager {
         }
         return result;
     }
-
     //endregion
 
     void updateEpicStatus(Epic epic) {
@@ -277,7 +257,6 @@ public class InMemoryTaskManager implements TaskManager {
             epic.setStatus(Status.IN_PROGRESS);
         }
     }
-
 
     void recalculateEpicTimeDetails(Epic epic) {
         List<Integer> subtaskIds = epic.getSubtaskIDs();
