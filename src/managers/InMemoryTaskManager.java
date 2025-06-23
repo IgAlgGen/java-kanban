@@ -6,6 +6,8 @@ import model.Task;
 import utils.Managers;
 import utils.Status;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -127,6 +129,7 @@ public class InMemoryTaskManager implements TaskManager {
         epic.setId(generateId());
         epics.put(epic.getId(), epic);
         updateEpicStatus(epic);
+        recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
     }
 
     @Override
@@ -137,6 +140,7 @@ public class InMemoryTaskManager implements TaskManager {
             epic.getSubtaskIDs().addAll(oldEpic.getSubtaskIDs());
             epics.put(epic.getId(), epic);
             updateEpicStatus(epic);
+            recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
         }
     }
 
@@ -168,7 +172,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeAllSubtasks() {
         for (Epic epic : epics.values()) {
             epic.clearSubtaskIds(); // Очищаем список ID подзадач в эпиках
-            epic.recalculateEpicTimeDetails(getSubtasksOfEpic(epic.getId())); // Пересчитываем временные параметры эпика
+            recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
         }
         subtasks.clear();
     }
@@ -198,7 +202,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic != null) {
             epic.addSubtaskId(subtask.getId());
             updateEpicStatus(epic); // Обновляем статус эпика после добавления подзадачи
-            epic.recalculateEpicTimeDetails(getSubtasksOfEpic(epic.getId())); // Пересчитываем временные параметры эпика
+            recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
         }
     }
 
@@ -215,7 +219,7 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
             updateEpicStatus(epic); // Обновляем статус эпика после изменения подзадачи
-            epic.recalculateEpicTimeDetails(getSubtasksOfEpic(epic.getId())); // Пересчитываем временные параметры эпика
+            recalculateEpicTimeDetails(epic);// Пересчитываем временные параметры эпика
         }
     }
 
@@ -229,6 +233,7 @@ public class InMemoryTaskManager implements TaskManager {
             if (epic != null) {
                 epic.removeSubtaskId(id);
                 updateEpicStatus(epic);
+                recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
             }
         }
     }
@@ -271,5 +276,34 @@ public class InMemoryTaskManager implements TaskManager {
         } else {
             epic.setStatus(Status.IN_PROGRESS);
         }
+    }
+
+
+    void recalculateEpicTimeDetails(Epic epic) {
+        List<Integer> subtaskIds = epic.getSubtaskIDs();
+        if (subtaskIds.isEmpty()) {
+            epic.setDuration(Duration.ZERO);
+            epic.setStartTime(null);
+            epic.setEndTime(null);
+            return;
+        }
+        epic.setDuration(Duration.ZERO);
+        LocalDateTime startTime = null;
+        LocalDateTime endTime = null;
+        for (Integer subtaskId : subtaskIds) {
+            Subtask subtask = subtasks.get(subtaskId);
+            if (subtask != null) {
+                epic.setDuration(epic.getDuration().plus(subtask.getDuration()));
+                if (startTime == null || subtask.getStartTime().isBefore(startTime)) {
+                    startTime = subtask.getStartTime();
+                }
+                LocalDateTime subtaskEndTime = subtask.getEndTime();
+                if (endTime == null || subtaskEndTime.isAfter(endTime)) {
+                    endTime = subtaskEndTime;
+                }
+            }
+        }
+        epic.setStartTime(startTime);
+        epic.setEndTime(endTime);
     }
 }
