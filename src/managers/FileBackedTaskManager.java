@@ -68,12 +68,27 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     manager.tasks.put(task.getId(), task);
                 }
                 IdGenerator.updateMaxId(task.getId()); // чтобы не повторялись ID
-
             }
         } catch (IOException e) {
             throw new ManagerLoadException("Ошибка загрузки из файла", e);
         }
         return manager;
+    }
+
+    private void prioritizeAll() {
+        // Очищаем текущее множество
+        prioritizedTasks.clear();
+        // Добавляем только задачи и подзадачи с заданным startTime
+        for (Task t : getAllTasks()) {
+            if (t.getStartTime() != null) {
+                prioritizedTasks.add(t);
+            }
+        }
+        for (Subtask sub : getAllSubtasks()) {
+            if (sub.getStartTime() != null) {
+                prioritizedTasks.add(sub);
+            }
+        }
     }
 
     private static Task fromString(String line) {
