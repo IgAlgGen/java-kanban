@@ -23,7 +23,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     // метод автосохранения
-    protected void saveToFile() {
+    public void saveToFile() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write("id,type,name,status,description,startTime,duration,epic\n");
 
@@ -53,22 +53,23 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
         try (BufferedReader reader = new BufferedReader(new java.io.FileReader(file))) {
             String line;
+            reader.readLine(); // читаем и игнорируем заголовок
             while ((line = reader.readLine()) != null) {
-                if (line.isEmpty() || line.startsWith("id,type,name,status,description,startTime,duration,epic")) {
-                    continue; // пропускаем заголовок и пустые строки
-                }
+                if (line.isEmpty()) continue; // пропускаем пустые строки
                 Task task = fromString(line);
                 if (task instanceof Epic epic) {
-                    manager.epics.put(epic.getId(), epic);
+                    manager.epics.put(epic.getId(), epic); // добавляем эпик в менеджер
                 } else if (task instanceof Subtask subtask) {
-                    manager.subtasks.put(subtask.getId(), subtask);
+                    manager.subtasks.put(subtask.getId(), subtask); // добавляем подзадачу в менеджер
                     manager.epics.get(subtask.getEpicId()).addSubtaskId(subtask.getId());// добавим подзадачу в эпик
                     manager.updateEpicStatus(manager.epics.get(subtask.getEpicId()));// обновляем статус эпика
+                    manager.recalculateEpicTimeDetails(manager.epics.get(subtask.getEpicId()));// пересчитываем время эпика
                 } else {
-                    manager.tasks.put(task.getId(), task);
+                    manager.tasks.put(task.getId(), task); // добавляем задачу в менеджер
                 }
                 IdGenerator.updateMaxId(task.getId()); // чтобы не повторялись ID
             }
+            manager.prioritizeAll(); // обновляем приоритеты задач
         } catch (IOException e) {
             throw new ManagerLoadException("Ошибка загрузки из файла", e);
         }
@@ -76,12 +77,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private void prioritizeAll() {
-        // Очищаем текущее множество
-        prioritizedTasks.clear();
-        // Добавляем только задачи и подзадачи с заданным startTime
+        prioritizedTasks.clear();// Очищаем текущее множество
         for (Task t : getAllTasks()) {
             if (t.getStartTime() != null) {
-                prioritizedTasks.add(t);
+                prioritizedTasks.add(t);// Добавляем только задачи и подзадачи с заданным startTime
             }
         }
         for (Subtask sub : getAllSubtasks()) {

@@ -60,4 +60,12 @@ class FileBackedTaskManagerTest {
         assertEquals("Description", loadedTask.getDescription(), "Загруженная задача должна иметь правильное описание");
 
     }
+
+    @Test
+    void saveToFile() {
+    }
+
+    @Test
+    void loadFromFile() {
+    }
 }

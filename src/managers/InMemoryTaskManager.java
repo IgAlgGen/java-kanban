@@ -1,5 +1,6 @@
 package managers;
 
+import exeptions.ValidationException;
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -39,7 +40,7 @@ public class InMemoryTaskManager implements TaskManager {
     );
 
     /**
-     * Возвращает  копию списка приоритизированных задач, чтобы избежать изменений в оригинальном множестве.
+     * Возвращает копию списка приоритизированных задач, чтобы избежать изменений в оригинальном множестве.
      * Этот метод позволяет получить задачи в порядке приоритета,
      *
      * @return Список приоритизированных задач.
@@ -47,6 +48,36 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Task> getPrioritizedTasks() {
         return new ArrayList<>(prioritizedTasks); // O(n) — обход TreeSet без дополнительной сортировки
+    }
+
+    /**
+     * Проверяет, пересекаются ли интервалы двух задач.
+     *
+     * @param a задача a
+     * @param b задача b
+     * @return Возвращает true, если интервалы [a.start, a.end) и [b.start, b.end) пересекаются.
+     */
+    private boolean isIntersect(Task a, Task b) {
+        LocalDateTime aStart = a.getStartTime();
+        LocalDateTime aEnd = a.getEndTime();
+        LocalDateTime bStart = b.getStartTime();
+        LocalDateTime bEnd = b.getEndTime();
+        if (aStart == null || bStart == null) {// если у одной нет времени — пересечения нет
+            return false;
+        }
+        return aStart.isBefore(bEnd) && bStart.isBefore(aEnd);// пересекаются, если начало одного раньше конца другого и наоборот
+    }
+
+    /**
+     * Проверяет, есть ли пересечение между задачей и другими задачами в приоритетной очереди.
+     *
+     * @param t задача, которую нужно проверить на пересечение с другими задачами
+     * @return Возвращает true, если есть пересечение с другими задачами в приоритетной очереди.
+     */
+    private boolean hasIntersection(Task t) {
+        return getPrioritizedTasks().stream()
+                .filter(other -> other.getId() != t.getId())// не сравниваем задачу саму с собой
+                .anyMatch(other -> isIntersect(other, t));
     }
 
     private void addToHistory(Task task) {
@@ -84,26 +115,51 @@ public class InMemoryTaskManager implements TaskManager {
         return task;
     }
 
+    /**
+     * Добавляет новую задачу в менеджер.<br>
+     * Генерирует уникальный идентификатор для задачи, проверяет на пересечение с другими задачами,
+     * и если пересечений нет, добавляет задачу в приоритетную очередь и в хранилище задач.<br>
+     * Если задача уже существует, то обновляет её идентификатор и добавляет в приоритетную очередь, если у неё есть время начала.<br>
+     * Если задача пересекается по времени с существующей задачей, выбрасывает исключение ValidationException.
+     *
+     * @param task Задача, которую нужно добавить в менеджер.
+     */
     @Override
     public void addTask(Task task) {
         task.setId(generateId());
-        tasks.put(task.getId(), task);
         if (task.getStartTime() != null) {
-            prioritizedTasks.add(task); // Добавляем задачу в приоритетную очередь
+            if (hasIntersection(task)) {
+                throw new ValidationException("Задача пересекается по времени с существующей");
+            }
+            prioritizedTasks.add(task);
         }
+        tasks.put(task.getId(), task);
     }
 
+    /**
+     * Обновляет существующую задачу в менеджере.<br>
+     * Удаляет старую версию задачи из приоритетной очереди, если у неё было время начала,
+     * проверяет на пересечение с другими задачами,
+     * и если пересечений нет, добавляет новую версию задачи в приоритетную очередь и обновляет хранилище задач.<br>
+     * Если задача пересекается по времени с существующей задачей, выбрасывает исключение ValidationException.
+     *
+     * @param task Задача, которую нужно обновить в менеджере.<br>
+     */
     @Override
     public void updateTask(Task task) {
         Task old = tasks.get(task.getId());
         if (old != null) {
             if (old.getStartTime() != null) {
-                prioritizedTasks.remove(old);// Убираем старую версию из приоритизации
+                prioritizedTasks.remove(old);// удаляем из prioritizedTasks старую версию, если была
             }
-            tasks.put(task.getId(), task);
+            if (task.getStartTime() != null && hasIntersection(task)) {// перед вставкой новой — проверяем пересечение
+                prioritizedTasks.add(old);// не забываем вернуть старую в множество, если хотим откатить
+                throw new ValidationException("Задача пересекается по времени с существующей");
+            }
             if (task.getStartTime() != null) {
-                prioritizedTasks.add(task);// Добавляем новую, если у неё есть startTime
+                prioritizedTasks.add(task);// всё ок — вставляем
             }
+            tasks.put(task.getId(), task); // обновляем задачу в хранилище
         }
     }
 
@@ -179,6 +235,74 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
+    /**
+     * Обновляет статус эпика на основе статусов его подзадач.
+     * Если все подзадачи новые, эпик становится новым.
+     * Если все подзадачи выполнены, эпик становится выполненным.
+     * Если есть хотя бы одна новая и одна выполненная подзадача, эпик становится в процессе выполнения.
+     *
+     * @param epic Эпик, статус которого нужно обновить.
+     */
+    void updateEpicStatus(Epic epic) {
+        List<Integer> subtaskIds = epic.getSubtaskIDs();
+        if (subtaskIds.isEmpty()) {
+            epic.setStatus(Status.NEW);
+            return;
+        }
+        boolean allNew = true;
+        boolean allDone = true;
+        for (Integer id : subtaskIds) {
+            Status status = subtasks.get(id).getStatus();
+            if (status != Status.NEW) {
+                allNew = false;
+            }
+            if (status != Status.DONE) {
+                allDone = false;
+            }
+        }
+        if (allDone) {
+            epic.setStatus(Status.DONE);
+        } else if (allNew) {
+            epic.setStatus(Status.NEW);
+        } else {
+            epic.setStatus(Status.IN_PROGRESS);
+        }
+    }
+
+    /**
+     * Пересчитывает временные параметры эпика на основе его подзадач.
+     * Если у эпика нет подзадач, устанавливает продолжительность в 0 и время начала/окончания в null.
+     * Иначе суммирует продолжительности подзадач и определяет минимальное время начала и максимальное время окончания.
+     *
+     * @param epic Эпик, для которого нужно пересчитать временные параметры.
+     */
+    void recalculateEpicTimeDetails(Epic epic) {
+        List<Integer> subtaskIds = epic.getSubtaskIDs();
+        if (subtaskIds.isEmpty()) {
+            epic.setDuration(Duration.ZERO);
+            epic.setStartTime(null);
+            epic.setEndTime(null);
+            return;
+        }
+        epic.setDuration(Duration.ZERO);
+        LocalDateTime startTime = null;
+        LocalDateTime endTime = null;
+        for (Integer subtaskId : subtaskIds) {
+            Subtask subtask = subtasks.get(subtaskId);
+            if (subtask != null) {
+                epic.setDuration(epic.getDuration().plus(subtask.getDuration()));
+                if (startTime == null || subtask.getStartTime().isBefore(startTime)) {
+                    startTime = subtask.getStartTime();
+                }
+                LocalDateTime subtaskEndTime = subtask.getEndTime();
+                if (endTime == null || subtaskEndTime.isAfter(endTime)) {
+                    endTime = subtaskEndTime;
+                }
+            }
+        }
+        epic.setStartTime(startTime);
+        epic.setEndTime(endTime);
+    }
     //endregion
     //region Методы для model.Subtask
     @Override
@@ -217,16 +341,24 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     /**
-     * Добавляет новую подзадачу в менеджер.
-     * Генерирует уникальный идентификатор для подзадачи, сохраняет её в хранилище,
-     * добавляет идентификатор подзадачи в соответствующий эпик, обновляет статус эпика
-     * и пересчитывает его временные параметры.
+     * Добавляет новую подзадачу в менеджер.<br>
+     * Генерирует уникальный идентификатор для подзадачи, проверяет на пересечение с другими подзадачами,
+     * и если пересечений нет, добавляет подзадачу в приоритетную очередь и в хранилище подзадач.<br>
+     * Если подзадача уже существует, то обновляет её идентификатор и добавляет в приоритетную очередь, если у неё есть время начала.<br>
+     * Если подзадача пересекается по времени с существующей, выбрасывает исключение ValidationException.<br>
+     * * Также привязывает подзадачу к соответствующему эпику, обновляет статус эпика и пересчитывает его временные параметры.
      *
      * @param subtask подзадача для добавления
      */
     @Override
     public void addSubtask(Subtask subtask) {
         subtask.setId(generateId());
+        if (subtask.getStartTime() != null) {
+            if (hasIntersection(subtask)) {
+                throw new ValidationException("Подзадача пересекается по времени с существующей");
+            }
+            prioritizedTasks.add(subtask);// Добавляем в приоритетную очередь
+        }
         subtasks.put(subtask.getId(), subtask);
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) { // Привязываем к эпику
@@ -234,15 +366,16 @@ public class InMemoryTaskManager implements TaskManager {
             updateEpicStatus(epic); // Обновляем статус эпика после добавления подзадачи
             recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
         }
-        if (subtask.getStartTime() != null) { // И добавляем в приоритетную очередь
-            prioritizedTasks.add(subtask);
-        }
     }
 
     /**
-     * Обновляет существующую подзадачу в менеджере.
-     * Заменяет подзадачу в хранилище, обновляет статус связанного эпика
-     * и пересчитывает временные параметры эпика на основе его подзадач.
+     * Обновляет существующую подзадачу в менеджере.<br>
+     * Удаляет старую версию подзадачи из приоритетной очереди, если у неё было время начала,
+     * проверяет на пересечение с другими подзадачами,
+     * и если пересечений нет, добавляет новую версию подзадачи в приоритетную очередь и обновляет хранилище подзадач.<br>
+     * Если подзадача пересекается по времени с существующей, выбрасывает исключение ValidationException.<br>
+     * * Также обновляет статус эпика, к которому привязана подзадача, и пересчитывает его временные параметры.<br>
+     * * Этот метод позволяет обновить подзадачу, сохраняя её связь с эпиком и корректно обновляя статусы и временные параметры эпика.
      *
      * @param subtask подзадача для обновления
      */
@@ -251,17 +384,22 @@ public class InMemoryTaskManager implements TaskManager {
         Subtask old = subtasks.get(subtask.getId());
         if (old != null) {
             if (old.getStartTime() != null) {
-                prioritizedTasks.remove(old);
+                prioritizedTasks.remove(old);// Удаляем старую версию из приоритетной очереди, если была
             }
-            subtasks.put(subtask.getId(), subtask);
-            Epic epic = epics.get(subtask.getEpicId());
-            if (epic != null) {
-                updateEpicStatus(epic);
-                recalculateEpicTimeDetails(epic);
+            if (subtask.getStartTime() != null && hasIntersection(subtask)) {
+                prioritizedTasks.add(old); // Возвращаем старую версию, если пересекается
+                throw new ValidationException("Подзадача пересекается по времени с существующей");
             }
             if (subtask.getStartTime() != null) {
-                prioritizedTasks.add(subtask);
+                prioritizedTasks.add(subtask);// Добавляем новую версию в приоритетную очередь
             }
+            subtasks.put(subtask.getId(), subtask);
+            Epic epic = epics.get(subtask.getEpicId());// Получаем эпик, к которому привязана подзадача
+            if (epic != null) {
+                updateEpicStatus(epic);// Обновляем статус эпика после обновления подзадачи
+                recalculateEpicTimeDetails(epic);// Пересчитываем временные параметры эпика
+            }
+
         }
     }
 
@@ -300,57 +438,5 @@ public class InMemoryTaskManager implements TaskManager {
     }
     //endregion
 
-    void updateEpicStatus(Epic epic) {
-        List<Integer> subtaskIds = epic.getSubtaskIDs();
-        if (subtaskIds.isEmpty()) {
-            epic.setStatus(Status.NEW);
-            return;
-        }
-        boolean allNew = true;
-        boolean allDone = true;
-        for (Integer id : subtaskIds) {
-            Status status = subtasks.get(id).getStatus();
-            if (status != Status.NEW) {
-                allNew = false;
-            }
-            if (status != Status.DONE) {
-                allDone = false;
-            }
-        }
-        if (allDone) {
-            epic.setStatus(Status.DONE);
-        } else if (allNew) {
-            epic.setStatus(Status.NEW);
-        } else {
-            epic.setStatus(Status.IN_PROGRESS);
-        }
-    }
 
-    void recalculateEpicTimeDetails(Epic epic) {
-        List<Integer> subtaskIds = epic.getSubtaskIDs();
-        if (subtaskIds.isEmpty()) {
-            epic.setDuration(Duration.ZERO);
-            epic.setStartTime(null);
-            epic.setEndTime(null);
-            return;
-        }
-        epic.setDuration(Duration.ZERO);
-        LocalDateTime startTime = null;
-        LocalDateTime endTime = null;
-        for (Integer subtaskId : subtaskIds) {
-            Subtask subtask = subtasks.get(subtaskId);
-            if (subtask != null) {
-                epic.setDuration(epic.getDuration().plus(subtask.getDuration()));
-                if (startTime == null || subtask.getStartTime().isBefore(startTime)) {
-                    startTime = subtask.getStartTime();
-                }
-                LocalDateTime subtaskEndTime = subtask.getEndTime();
-                if (endTime == null || subtaskEndTime.isAfter(endTime)) {
-                    endTime = subtaskEndTime;
-                }
-            }
-        }
-        epic.setStartTime(startTime);
-        epic.setEndTime(endTime);
-    }
 }

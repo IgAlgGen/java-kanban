@@ -19,16 +19,14 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Path filePath = Path.of("tasks.csv");
         TaskManager manager = FileBackedTaskManager.loadFromFile(filePath.toFile());
-        preparingForFirstStart(manager);
+        //preparingForFirstStart(manager);
 
-//        BufferedReader reader = new BufferedReader(new java.io.FileReader(filePath.toFile()));
-//        String line;
-//        while ((line = reader.readLine()) != null) {
-//            String[] parts = line.split(",");
-//            System.out.println(parts.length + " parts: " + line);
-//        }
-
-
+        manager.getPrioritizedTasks().forEach(task -> {
+            System.out.println(task.getClass().getSimpleName() + " ID: " + task.getId() +
+                    ", Name: " + task.getName() +
+                    ", Start Time: " + task.getStartTime() +
+                    ", Duration: " + task.getDuration());
+        });
 
         System.out.println("All tasks:");
         printList(manager.getAllTasks());
