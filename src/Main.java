@@ -36,9 +36,6 @@ public class Main {
         printList(manager.getAllSubtasks());
 
 
-
-
-
     }
 
     private static void preparingForFirstStart(TaskManager manager) {
@@ -77,7 +74,7 @@ public class Main {
                     }
                     if (task instanceof Epic) {
                         Epic epic = (Epic) task;
-                        System.out.print("  Subtask IDs: " + epic.getSubtaskIDs() );
+                        System.out.print("  Subtask IDs: " + epic.getSubtaskIDs());
                         if (epic.getEndTime() != null) {
                             System.out.print(", End Time: " + epic.getEndTime());
                             System.out.println();

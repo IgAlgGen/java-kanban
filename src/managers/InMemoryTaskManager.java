@@ -10,6 +10,9 @@ import utils.Status;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.Optional;
 
 import static utils.IdGenerator.*;
 
@@ -97,13 +100,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllTasks() {
-        for (Task task : tasks.values()) {
-            historyManager.remove(task.getId()); // Удаляем задачи из истории
-            if (task.getStartTime() != null) {
-                prioritizedTasks.remove(task); // Удаляем задачи из приоритетной очереди
-            }
-        }
-        tasks.clear();
+        tasks.values().forEach(t -> {
+            historyManager.remove(t.getId()); // удаляем задачу из истории
+            if (t.getStartTime() != null) prioritizedTasks.remove(t); // удаляем из приоритетной очереди, если была
+        });
+        tasks.clear();// очищаем хранилище задач
     }
 
     @Override
@@ -119,7 +120,6 @@ public class InMemoryTaskManager implements TaskManager {
      * Добавляет новую задачу в менеджер.<br>
      * Генерирует уникальный идентификатор для задачи, проверяет на пересечение с другими задачами,
      * и если пересечений нет, добавляет задачу в приоритетную очередь и в хранилище задач.<br>
-     * Если задача уже существует, то обновляет её идентификатор и добавляет в приоритетную очередь, если у неё есть время начала.<br>
      * Если задача пересекается по времени с существующей задачей, выбрасывает исключение ValidationException.
      *
      * @param task Задача, которую нужно добавить в менеджер.
@@ -181,14 +181,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllEpics() {
-        for (Epic epic : epics.values()) {
-            for (Integer subtaskId : epic.getSubtaskIDs()) {
-                historyManager.remove(subtaskId); // Удаляем подзадачи из истории
-            }
-            historyManager.remove(epic.getId()); // Удаляем эпики из истории
-        }
-        epics.clear(); // Эпики удаляются
-        subtasks.clear(); // Подзадачи эпиков тоже удаляются
+        epics.values().forEach(e -> historyManager.remove(e.getId())); // удаляем эпики из истории
+        epics.clear(); // очищаем хранилище эпиков
+        removeAllSubtasks(); // удаляем все подзадачи, связанные с эпиками
     }
 
     @Override
@@ -208,30 +203,44 @@ public class InMemoryTaskManager implements TaskManager {
         recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
     }
 
+    /**
+     * Обновляет существующий эпик в менеджере.<br>
+     * Очищает ID подзадач, чтобы избежать дублирования, сохраняет старые ID подзадач,
+     * и обновляет эпик в хранилище.<br>
+     * После обновления эпика пересчитывает его статус и временные параметры.<br>
+     * Этот метод позволяет обновить эпик, сохраняя связь с подзадачами и корректно обновляя статусы и временные параметры эпика.
+     *
+     * @param epic Эпик, который нужно обновить в менеджере.<br>
+     */
     @Override
     public void updateEpic(Epic epic) {
         Epic oldEpic = epics.get(epic.getId());
         if (oldEpic != null) {
-            epic.clearSubtaskIds();
-            epic.getSubtaskIDs().addAll(oldEpic.getSubtaskIDs());
-            epics.put(epic.getId(), epic);
-            updateEpicStatus(epic);
+            epic.clearSubtaskIds(); // Очищаем ID подзадач, чтобы избежать дублирования
+            epic.getSubtaskIDs().addAll(oldEpic.getSubtaskIDs()); // добавляем прежние ID подзадач
+            epics.put(epic.getId(), epic);   // Обновляем эпик в хранилище
+            updateEpicStatus(epic); // Обновляем статус эпика после обновления
             recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
         }
     }
 
+    /**
+     * Удаляет эпик по его идентификатору.<br>
+     * Удаляет эпик из хранилища, очищает историю,
+     * а также удаляет все подзадачи, связанные с этим эпиком.<br>
+     *
+     * @param id идентификатор эпика, который нужно удалить.
+     */
     @Override
     public void removeEpicById(int id) {
         Epic epic = epics.remove(id);
         if (epic != null) {
-            historyManager.remove(epic.getId()); // Удаляем эпик из истории
-            for (Integer subId : epic.getSubtaskIDs()) {
-                historyManager.remove(subId); // Удаляем подзадачи из истории
-                Subtask old = subtasks.remove(subId);
-                if (old != null && old.getStartTime() != null) {
-                    prioritizedTasks.remove(old); // Удаляем подзадачи из приоритетной очереди
-                }
-            }
+            historyManager.remove(id);
+            epic.getSubtaskIDs().stream()
+                    .map(subtasks::remove)   // Удаляем подзадачи, связанные с эпиком
+                    .filter(Objects::nonNull)   // Фильтруем только существующие подзадачи
+                    .filter(s -> s.getStartTime() != null)  // Проверяем, что у подзадачи есть время начала
+                    .forEach(prioritizedTasks::remove); // Удаляем подзадачи из приоритетной очереди
         }
     }
 
@@ -244,29 +253,17 @@ public class InMemoryTaskManager implements TaskManager {
      * @param epic Эпик, статус которого нужно обновить.
      */
     void updateEpicStatus(Epic epic) {
-        List<Integer> subtaskIds = epic.getSubtaskIDs();
-        if (subtaskIds.isEmpty()) {
-            epic.setStatus(Status.NEW);
+        List<Subtask> subs = epic.getSubtaskIDs().stream()
+                .map(subtasks::get) // Получаем подзадачи по их ID
+                .filter(Objects::nonNull)   // Фильтруем только существующие подзадачи
+                .collect(Collectors.toList());  // Собираем их в список
+        if (subs.isEmpty()) {
+            epic.setStatus(Status.NEW); // Если нет подзадач, устанавливаем статус NEW
             return;
         }
-        boolean allNew = true;
-        boolean allDone = true;
-        for (Integer id : subtaskIds) {
-            Status status = subtasks.get(id).getStatus();
-            if (status != Status.NEW) {
-                allNew = false;
-            }
-            if (status != Status.DONE) {
-                allDone = false;
-            }
-        }
-        if (allDone) {
-            epic.setStatus(Status.DONE);
-        } else if (allNew) {
-            epic.setStatus(Status.NEW);
-        } else {
-            epic.setStatus(Status.IN_PROGRESS);
-        }
+        boolean allNew = subs.stream().allMatch(s -> s.getStatus() == Status.NEW);  // Проверяем, все ли подзадачи новые
+        boolean allDone = subs.stream().allMatch(s -> s.getStatus() == Status.DONE);    // Проверяем, все ли подзадачи выполнены
+        epic.setStatus(allDone ? Status.DONE : allNew ? Status.NEW : Status.IN_PROGRESS);   // Устанавливаем статус эпика в зависимости от статусов подзадач
     }
 
     /**
@@ -277,32 +274,34 @@ public class InMemoryTaskManager implements TaskManager {
      * @param epic Эпик, для которого нужно пересчитать временные параметры.
      */
     void recalculateEpicTimeDetails(Epic epic) {
-        List<Integer> subtaskIds = epic.getSubtaskIDs();
-        if (subtaskIds.isEmpty()) {
-            epic.setDuration(Duration.ZERO);
-            epic.setStartTime(null);
-            epic.setEndTime(null);
+        List<Subtask> subs = epic.getSubtaskIDs().stream()
+                .map(subtasks::get) // Получаем подзадачи по их ID
+                .filter(Objects::nonNull)   // Фильтруем только существующие подзадачи
+                .collect(Collectors.toList());  // Собираем их в список
+        if (subs.isEmpty()) {
+            epic.setDuration(Duration.ZERO);    // Если нет подзадач, устанавливаем продолжительность в 0
+            epic.setStartTime(null);    // Устанавливаем время начала в null
+            epic.setEndTime(null);  // Устанавливаем время окончания в null
             return;
         }
-        epic.setDuration(Duration.ZERO);
-        LocalDateTime startTime = null;
-        LocalDateTime endTime = null;
-        for (Integer subtaskId : subtaskIds) {
-            Subtask subtask = subtasks.get(subtaskId);
-            if (subtask != null) {
-                epic.setDuration(epic.getDuration().plus(subtask.getDuration()));
-                if (startTime == null || subtask.getStartTime().isBefore(startTime)) {
-                    startTime = subtask.getStartTime();
-                }
-                LocalDateTime subtaskEndTime = subtask.getEndTime();
-                if (endTime == null || subtaskEndTime.isAfter(endTime)) {
-                    endTime = subtaskEndTime;
-                }
-            }
-        }
-        epic.setStartTime(startTime);
-        epic.setEndTime(endTime);
+        Duration total = subs.stream()
+                .map(Subtask::getDuration)  // Суммируем продолжительности всех подзадач
+                .reduce(Duration.ZERO, Duration::plus); // Начинаем с нулевой продолжительности и складываем
+        LocalDateTime start = subs.stream()
+                .map(Subtask::getStartTime) // Получаем время начала всех подзадач
+                .filter(Objects::nonNull)   // Фильтруем только существующие времена начала
+                .min(LocalDateTime::compareTo)  // Находим минимальное время начала
+                .orElse(null);  // Если нет подзадач с временем начала, возвращаем null
+        LocalDateTime end = subs.stream()
+                .map(Subtask::getEndTime)   // Получаем время окончания всех подзадач
+                .filter(Objects::nonNull)   // Фильтруем только существующие времена окончания
+                .max(LocalDateTime::compareTo)  // Находим максимальное время окончания
+                .orElse(null);  // Если нет подзадач с временем окончания, возвращаем null
+        epic.setDuration(total);
+        epic.setStartTime(start);
+        epic.setEndTime(end);
     }
+
     //endregion
     //region Методы для model.Subtask
     @Override
@@ -317,18 +316,16 @@ public class InMemoryTaskManager implements TaskManager {
      */
     @Override
     public void removeAllSubtasks() {
-        for (Subtask sub : subtasks.values()) {// Очищаем приоритетное множество и историю
-            historyManager.remove(sub.getId());
-            if (sub.getStartTime() != null) {
-                prioritizedTasks.remove(sub);
-            }
-        }
-        for (Epic epic : epics.values()) {// Очищаем связи в эпиках
-            epic.clearSubtaskIds();
-            updateEpicStatus(epic);
-            recalculateEpicTimeDetails(epic);
-        }
-        subtasks.clear();
+        subtasks.values().forEach(s -> {
+            historyManager.remove(s.getId());   // удаляем подзадачу из истории
+            if (s.getStartTime() != null) prioritizedTasks.remove(s);   // удаляем из приоритетной очереди, если была
+        });
+        epics.values().forEach(epic -> {
+            epic.clearSubtaskIds(); // Очищаем ID подзадач у эпика
+            updateEpicStatus(epic); // Обновляем статус эпика после удаления всех подзадач
+            recalculateEpicTimeDetails(epic);   // Пересчитываем временные параметры эпика
+        });
+        subtasks.clear();   // очищаем хранилище подзадач
     }
 
     @Override
@@ -344,7 +341,6 @@ public class InMemoryTaskManager implements TaskManager {
      * Добавляет новую подзадачу в менеджер.<br>
      * Генерирует уникальный идентификатор для подзадачи, проверяет на пересечение с другими подзадачами,
      * и если пересечений нет, добавляет подзадачу в приоритетную очередь и в хранилище подзадач.<br>
-     * Если подзадача уже существует, то обновляет её идентификатор и добавляет в приоритетную очередь, если у неё есть время начала.<br>
      * Если подзадача пересекается по времени с существующей, выбрасывает исключение ValidationException.<br>
      * * Также привязывает подзадачу к соответствующему эпику, обновляет статус эпика и пересчитывает его временные параметры.
      *
@@ -375,7 +371,6 @@ public class InMemoryTaskManager implements TaskManager {
      * и если пересечений нет, добавляет новую версию подзадачи в приоритетную очередь и обновляет хранилище подзадач.<br>
      * Если подзадача пересекается по времени с существующей, выбрасывает исключение ValidationException.<br>
      * * Также обновляет статус эпика, к которому привязана подзадача, и пересчитывает его временные параметры.<br>
-     * * Этот метод позволяет обновить подзадачу, сохраняя её связь с эпиком и корректно обновляя статусы и временные параметры эпика.
      *
      * @param subtask подзадача для обновления
      */
@@ -425,18 +420,20 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
+    /**
+     * Получает список подзадач, связанных с указанным эпиком.<br>
+     *
+     * @param epicId идентификатор эпика, для которого нужно получить подзадачи
+     * @return  Список подзадач, связанных с указанным эпиком.<br>
+     */
     @Override
     public List<Subtask> getSubtasksOfEpic(int epicId) {
-        List<Subtask> result = new ArrayList<>();
-        Epic epic = epics.get(epicId);
-        if (epic != null) {
-            for (Integer subtaskId : epic.getSubtaskIDs()) {
-                result.add(subtasks.get(subtaskId));
-            }
-        }
-        return result;
+        return Optional.ofNullable(epics.get(epicId))   // Получаем эпик по его ID
+                .map(e -> e.getSubtaskIDs().stream()    // Получаем список ID подзадач эпика
+                        .map(subtasks::get) // Получаем подзадачи по их ID
+                        .filter(Objects::nonNull)   // Фильтруем только существующие подзадачи
+                        .collect(Collectors.toList()))  // Собираем их в список
+                .orElseGet(Collections::emptyList); // Если эпик не найден, возвращаем пустой список
     }
     //endregion
-
-
 }
