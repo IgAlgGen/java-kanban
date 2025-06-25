@@ -64,16 +64,20 @@ public class Task {
         this.status = status;
     }
 
+    public void setName(String string) {
+        this.name = string;
+    }
+
     public String getName() {
         return name;
     }
-
     public String getDescription() {
         return description;
     }
-    //endregion
 
+    //endregion
     //region equals и hashCode
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -86,8 +90,8 @@ public class Task {
     public int hashCode() {
         return Objects.hash(id, name, description, status);
     }
-
     //endregion
+
     /**
      * Возвращает время окончания задачи, которое рассчитывается как
      * время начала плюс продолжительность задачи.
@@ -109,11 +113,4 @@ public class Task {
                 ", duration=" + duration +
                 '}';
     }
-//        return getClass().getSimpleName() + "{" +
-//                "id=" + id +
-//                ", name='" + name + '\'' +
-//                ", description='" + description + '\'' +
-//                ", status=" + status +
-//                '}';
-
 }

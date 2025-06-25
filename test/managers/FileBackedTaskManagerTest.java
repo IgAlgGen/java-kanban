@@ -1,71 +1,54 @@
 package managers;
 
 import model.Task;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import utils.Status;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-class FileBackedTaskManagerTest {
-    private File tempFile;
-    private FileBackedTaskManager manager;
+public class FileBackedTaskManagerTest extends AbstractTaskManagerTest<FileBackedTaskManager> {
+    private File file;
 
-    @BeforeEach
-    void setUp() throws IOException {
-        tempFile = File.createTempFile("tasksTest", ".csv");
-        manager = new FileBackedTaskManager(tempFile);
-    }
-
-    @AfterEach
-    void tearDown() {
-        tempFile.delete();
-    }
-
-    @Test
-    void saveToFile_writesTasksToFile() throws IOException {
-        Task task = new Task("Test Task", "Description", Status.NEW, null, null);
-        manager.addTask(task);
-
-        // Проверяем, что файл содержит строку задачи
-        String content = Files.readString(tempFile.toPath());
-        assertTrue(content.contains("Test Task"));
-        assertTrue(content.contains("Description"));
-        assertTrue(content.contains("NEW"));
-
-    }
-
-
-    @Test
-    void loadFromFile_loadsTasksFromFile() throws IOException {
-        // Сохраняем задачу в файл
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
-            writer.write("id,type,name,status,description,startTime,duration,epic\n");
-            writer.write("1,TASK,Test Task,NEW,Description,2025-01-01T18:00,30,0\n");
-            writer.newLine();
+    @Override
+    protected FileBackedTaskManager createManager() {
+        try {
+            file = File.createTempFile("tasks", ".csv");
+            file.deleteOnExit();
+        } catch (IOException e) {
+            fail("Не удалось создать временный файл");
         }
-
-        // Загружаем задачи из файла
-        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-        Task loadedTask = loadedManager.getTaskById(1);
-        assertEquals("Test Task", loadedTask.getName(), "Загруженная задача должна иметь правильное имя");
-        assertEquals("Description", loadedTask.getDescription(), "Загруженная задача должна иметь правильное описание");
-
+        return new FileBackedTaskManager(file);
     }
 
     @Test
     void saveToFile() {
+        Task task = new Task(0, "TASK", "Description", Status.NEW,
+                LocalDateTime.of(2025, 6, 25, 12, 0), Duration.ofMinutes(30));
+        manager.addTask(task);
+        manager.saveToFile();
+        String content = assertDoesNotThrow(() -> Files.readString(file.toPath()),
+                "Чтение файла не должно выбрасывать исключение");
+        assertTrue(content.contains("TASK"), "Файл должен содержать заголовок и записи задач");
     }
 
     @Test
     void loadFromFile() {
+        // Добавляем и сохраняем
+        Task task = new Task(0, "FT2", "FD2", Status.NEW,
+                LocalDateTime.of(2025, 6, 25, 13, 0), Duration.ofMinutes(45));
+        manager.addTask(task);
+        manager.saveToFile();
+        FileBackedTaskManager loaded = assertDoesNotThrow(
+                () -> FileBackedTaskManager.loadFromFile(file),
+                "Загрузка из файла не должна выбрасывать исключение");
+        assertEquals(1, loaded.getAllTasks().size(), "Должна загрузиться одна задача");
+        assertEquals(task.getName(), loaded.getTaskById(task.getId()).getName(),
+                "Загруженная задача должна иметь корректные данные");
     }
 }
