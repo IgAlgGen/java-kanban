@@ -65,10 +65,10 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime aEnd = a.getEndTime();
         LocalDateTime bStart = b.getStartTime();
         LocalDateTime bEnd = b.getEndTime();
-        if (aStart == null || bStart == null) {// если у одной нет времени — пересечения нет
+        if (aStart == null || bStart == null) { // если у одной нет времени — пересечения нет
             return false;
         }
-        return aStart.isBefore(bEnd) && bStart.isBefore(aEnd);// пересекаются, если начало одного раньше конца другого и наоборот
+        return aStart.isBefore(bEnd) && bStart.isBefore(aEnd); // пересекаются, если начало одного раньше конца другого и наоборот
     }
 
     /**
@@ -79,7 +79,7 @@ public class InMemoryTaskManager implements TaskManager {
      */
     private boolean hasIntersection(Task t) {
         return getPrioritizedTasks().stream()
-                .filter(other -> other.getId() != t.getId())// не сравниваем задачу саму с собой
+                .filter(other -> other.getId() != t.getId()) // не сравниваем задачу саму с собой
                 .anyMatch(other -> isIntersect(other, t));
     }
 
@@ -104,7 +104,7 @@ public class InMemoryTaskManager implements TaskManager {
             historyManager.remove(t.getId()); // удаляем задачу из истории
             if (t.getStartTime() != null) prioritizedTasks.remove(t); // удаляем из приоритетной очереди, если была
         });
-        tasks.clear();// очищаем хранилище задач
+        tasks.clear(); // очищаем хранилище задач
     }
 
     @Override
@@ -150,14 +150,14 @@ public class InMemoryTaskManager implements TaskManager {
         Task old = tasks.get(task.getId());
         if (old != null) {
             if (old.getStartTime() != null) {
-                prioritizedTasks.remove(old);// удаляем из prioritizedTasks старую версию, если была
+                prioritizedTasks.remove(old); // удаляем из prioritizedTasks старую версию, если была
             }
-            if (task.getStartTime() != null && hasIntersection(task)) {// перед вставкой новой — проверяем пересечение
-                prioritizedTasks.add(old);// не забываем вернуть старую в множество, если хотим откатить
+            if (task.getStartTime() != null && hasIntersection(task)) { // перед вставкой новой — проверяем пересечение
+                prioritizedTasks.add(old); // не забываем вернуть старую в множество, если хотим откатить
                 throw new ValidationException("Задача пересекается по времени с существующей");
             }
             if (task.getStartTime() != null) {
-                prioritizedTasks.add(task);// всё ок — вставляем
+                prioritizedTasks.add(task); // всё ок — вставляем
             }
             tasks.put(task.getId(), task); // обновляем задачу в хранилище
         }
@@ -218,7 +218,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (oldEpic != null) {
             epic.clearSubtaskIds(); // Очищаем ID подзадач, чтобы избежать дублирования
             epic.getSubtaskIDs().addAll(oldEpic.getSubtaskIDs()); // добавляем прежние ID подзадач
-            epics.put(epic.getId(), epic);   // Обновляем эпик в хранилище
+            epics.put(epic.getId(), epic); // Обновляем эпик в хранилище
             updateEpicStatus(epic); // Обновляем статус эпика после обновления
             recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
         }
@@ -237,9 +237,9 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic != null) {
             historyManager.remove(id);
             epic.getSubtaskIDs().stream()
-                    .map(subtasks::remove)   // Удаляем подзадачи, связанные с эпиком
-                    .filter(Objects::nonNull)   // Фильтруем только существующие подзадачи
-                    .filter(s -> s.getStartTime() != null)  // Проверяем, что у подзадачи есть время начала
+                    .map(subtasks::remove) // Удаляем подзадачи, связанные с эпиком
+                    .filter(Objects::nonNull) // Фильтруем только существующие подзадачи
+                    .filter(s -> s.getStartTime() != null) // Проверяем, что у подзадачи есть время начала
                     .forEach(prioritizedTasks::remove); // Удаляем подзадачи из приоритетной очереди
         }
     }
@@ -255,8 +255,8 @@ public class InMemoryTaskManager implements TaskManager {
     void updateEpicStatus(Epic epic) {
         List<Subtask> subs = epic.getSubtaskIDs().stream()
                 .map(subtasks::get) // Получаем подзадачи по их ID
-                .filter(Objects::nonNull)   // Фильтруем только существующие подзадачи
-                .collect(Collectors.toList());  // Собираем их в список
+                .filter(Objects::nonNull) // Фильтруем только существующие подзадачи
+                .collect(Collectors.toList()); // Собираем их в список
         if (subs.isEmpty()) {
             epic.setStatus(Status.NEW); // Если нет подзадач, устанавливаем статус NEW
             return;
@@ -353,7 +353,7 @@ public class InMemoryTaskManager implements TaskManager {
             if (hasIntersection(subtask)) {
                 throw new ValidationException("Подзадача пересекается по времени с существующей");
             }
-            prioritizedTasks.add(subtask);// Добавляем в приоритетную очередь
+            prioritizedTasks.add(subtask); // Добавляем в приоритетную очередь
         }
         subtasks.put(subtask.getId(), subtask);
         Epic epic = epics.get(subtask.getEpicId());
@@ -379,20 +379,20 @@ public class InMemoryTaskManager implements TaskManager {
         Subtask old = subtasks.get(subtask.getId());
         if (old != null) {
             if (old.getStartTime() != null) {
-                prioritizedTasks.remove(old);// Удаляем старую версию из приоритетной очереди, если была
+                prioritizedTasks.remove(old); // Удаляем старую версию из приоритетной очереди, если была
             }
             if (subtask.getStartTime() != null && hasIntersection(subtask)) {
                 prioritizedTasks.add(old); // Возвращаем старую версию, если пересекается
                 throw new ValidationException("Подзадача пересекается по времени с существующей");
             }
             if (subtask.getStartTime() != null) {
-                prioritizedTasks.add(subtask);// Добавляем новую версию в приоритетную очередь
+                prioritizedTasks.add(subtask); // Добавляем новую версию в приоритетную очередь
             }
             subtasks.put(subtask.getId(), subtask);
-            Epic epic = epics.get(subtask.getEpicId());// Получаем эпик, к которому привязана подзадача
+            Epic epic = epics.get(subtask.getEpicId()); // Получаем эпик, к которому привязана подзадача
             if (epic != null) {
-                updateEpicStatus(epic);// Обновляем статус эпика после обновления подзадачи
-                recalculateEpicTimeDetails(epic);// Пересчитываем временные параметры эпика
+                updateEpicStatus(epic); // Обновляем статус эпика после обновления подзадачи
+                recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
             }
 
         }
@@ -413,7 +413,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (removed != null) {
             Epic epic = epics.get(removed.getEpicId());
             if (epic != null) {
-                epic.removeSubtaskId(id);// Удаляем подзадачу из эпика, если она была привязана к нему
+                epic.removeSubtaskId(id); // Удаляем подзадачу из эпика, если она была привязана к нему
                 updateEpicStatus(epic); // Обновляем статус эпика после удаления подзадачи
                 recalculateEpicTimeDetails(epic); // Пересчитываем временные параметры эпика
             }
