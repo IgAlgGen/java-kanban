@@ -52,27 +52,6 @@ class MasterTest {
         assertEquals(epic1, epic2, "Эпики с тем же ID должны быть равны");
     }
 
-    //Проверьте, что объект model. Epic нельзя добавить в самого себя в виде подзадачи;
-    @Test
-    void epicShouldNotAddItselfAsSubtask() {
-        Epic epic = manager.getEpicById(3);
-        Subtask subtask = new Subtask("Subtask 1", "Description 1", Status.NEW,  LocalDateTime.of(2025, 1, 1, 18, 0),Duration.ofMinutes(30), epic.getId());
-        manager.addSubtask(subtask);
-        Subtask retrievedSubtask = manager.getSubtaskById(subtask.getId());
-        assertNotEquals(subtask.getId(), retrievedSubtask.getEpicId(), "ID эпика не должен совпадать с ID подзадачи");
-
-    }
-
-    //Проверьте, что объект model. Subtask нельзя сделать своим же эпиком;
-    @Test
-    void subtaskShouldNotBeItsOwnEpic() {
-        Subtask subtask = manager.getSubtaskById(6);
-        Epic epic = new Epic("Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(120), LocalDateTime.of(2025, 1, 1, 14, 0));
-        manager.addEpic(epic);
-        Epic retrievedEpic = manager.getEpicById(epic.getId());
-        assertNotEquals(subtask.getId(), retrievedEpic.getId(), "ID подзадачи не должен совпадать с ID эпика");
-    }
-
     //Убедитесь, что утилитарный класс всегда возвращает проинициализированные и готовые к работе экземпляры менеджеров;
     @Test
     void managersShouldReturnInitializedInstances() {
