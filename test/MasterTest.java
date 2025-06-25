@@ -19,12 +19,12 @@ class MasterTest {
     static void beforeAll() {
         manager = Managers.getDefault();
         manager.addTask(new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(90)));
-        manager.addTask(new Task("Task 2", "Description 2", Status.NEW, LocalDateTime.of(2025, 1, 1, 12, 0), Duration.ofMinutes(60)));
-        manager.addEpic(new Epic("Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(120), LocalDateTime.of(2025, 1, 1, 14, 0)));
-        manager.addEpic(new Epic("Epic 2", "Description 2", Status.NEW, Duration.ofMinutes(150), LocalDateTime.of(2025, 1, 1, 16, 0)));
-        manager.addSubtask(new Subtask("Subtask 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 18, 0), Duration.ofMinutes(30), 3));
-        manager.addSubtask(new Subtask("Subtask 2", "Description 2", Status.NEW, LocalDateTime.of(2025, 1, 1, 19, 0), Duration.ofMinutes(45), 4));
-        manager.addSubtask(new Subtask("Subtask 3", "Description 3", Status.NEW, LocalDateTime.of(2025, 1, 1, 20, 0), Duration.ofMinutes(60), 4));
+        manager.addTask(new Task("Task 2", "Description 2", Status.NEW, LocalDateTime.of(2025, 2, 1, 12, 0), Duration.ofMinutes(60)));
+        manager.addEpic(new Epic("Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(120), LocalDateTime.of(2025, 3, 1, 14, 0)));
+        manager.addEpic(new Epic("Epic 2", "Description 2", Status.NEW, Duration.ofMinutes(150), LocalDateTime.of(2025, 4, 1, 16, 0)));
+        manager.addSubtask(new Subtask("Subtask 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 5, 1, 18, 0), Duration.ofMinutes(30), 3));
+        manager.addSubtask(new Subtask("Subtask 2", "Description 2", Status.NEW, LocalDateTime.of(2025, 5, 1, 19, 0), Duration.ofMinutes(45), 4));
+        manager.addSubtask(new Subtask("Subtask 3", "Description 3", Status.NEW, LocalDateTime.of(2025, 7, 1, 20, 0), Duration.ofMinutes(60), 4));
     }
 
 
@@ -86,9 +86,9 @@ class MasterTest {
     //проверьте, что InMemoryTaskManager действительно добавляет задачи разного типа и может найти их по id;
     @Test
     void inMemoryTaskManagerShouldAddAndFindTasks() {
-        Task task = new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(90));
-        Epic epic = new Epic("Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(120), LocalDateTime.of(2025, 1, 1, 14, 0));
-        Subtask subtask = new Subtask("Subtask 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 18, 0), Duration.ofMinutes(30), epic.getId());
+        Task task = new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 5, 10, 0), Duration.ofMinutes(90));
+        Epic epic = new Epic("Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(120), LocalDateTime.of(2025, 1, 2, 14, 0));
+        Subtask subtask = new Subtask("Subtask 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 10, 18, 0), Duration.ofMinutes(30), epic.getId());
 
         manager.addTask(task);
         manager.addEpic(epic);
