@@ -105,7 +105,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String startTimeStr = fields[5].equals("null") ? null : fields[5];
         LocalDateTime startTime = startTimeStr != null ? LocalDateTime.parse(startTimeStr) : null;
         String durationStr = fields[6];
-        Long duration = durationStr != null? Long.parseLong(fields[6]) : 0L;
+        Long duration = durationStr != null ? Long.parseLong(fields[6]) : 0L;
 
 
 
