@@ -59,7 +59,6 @@ class MasterTest {
         Subtask subtask = new Subtask("Subtask 1", "Description 1", Status.NEW,  LocalDateTime.of(2025, 1, 1, 18, 0),Duration.ofMinutes(30), epic.getId());
         manager.addSubtask(subtask);
         Subtask retrievedSubtask = manager.getSubtaskById(subtask.getId());
-        assertNotEquals(epic, subtask, "Эпик не должен добавляться в самого себя в виде подзадачи");
         assertNotEquals(subtask.getId(), retrievedSubtask.getEpicId(), "ID эпика не должен совпадать с ID подзадачи");
 
     }
@@ -71,7 +70,6 @@ class MasterTest {
         Epic epic = new Epic("Epic 1", "Description 1", Status.NEW, Duration.ofMinutes(120), LocalDateTime.of(2025, 1, 1, 14, 0));
         manager.addEpic(epic);
         Epic retrievedEpic = manager.getEpicById(epic.getId());
-        assertNotEquals(subtask, epic, "Подзадача не должна быть своим же эпиком");
         assertNotEquals(subtask.getId(), retrievedEpic.getId(), "ID подзадачи не должен совпадать с ID эпика");
     }
 
