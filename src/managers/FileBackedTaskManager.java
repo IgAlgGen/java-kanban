@@ -120,16 +120,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private String toString(Task task) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(task.getId()).append(",");
-        sb.append(task.getType()).append(",");
-        sb.append(task.getName()).append(",");
-        sb.append(task.getStatus()).append(",");
-        sb.append(task.getDescription()).append(",");
-        sb.append(task.getStartTime() != null ? task.getStartTime().toString() : "null").append(",");
-        sb.append(task.getDuration() != null ? task.getDuration().toMinutes() : "0").append(",");
-        sb.append(task instanceof Subtask ? ((Subtask) task).getEpicId() : "");
-        return sb.toString();
+        String sb = task.getId() + "," +
+                task.getType() + "," +
+                task.getName() + "," +
+                task.getStatus() + "," +
+                task.getDescription() + "," +
+                (task.getStartTime() != null ? task.getStartTime().toString() : "null") + "," +
+                (task.getDuration() != null ? task.getDuration().toMinutes() : "0") + "," +
+                (task instanceof Subtask ? ((Subtask) task).getEpicId() : "");
+        return sb;
     }
 
     //region Методы переопределенные из InMemoryTaskManager

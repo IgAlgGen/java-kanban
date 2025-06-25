@@ -72,15 +72,13 @@ public class Main {
                         System.out.println();
 
                     }
-                    if (task instanceof Epic) {
-                        Epic epic = (Epic) task;
+                    if (task instanceof Epic epic) {
                         System.out.print("  Subtask IDs: " + epic.getSubtaskIDs());
                         if (epic.getEndTime() != null) {
                             System.out.print(", End Time: " + epic.getEndTime());
                             System.out.println();
                         }
-                    } else if (task instanceof Subtask) {
-                        Subtask subtask = (Subtask) task;
+                    } else if (task instanceof Subtask subtask) {
                         System.out.print("  Epic ID: " + subtask.getEpicId());
                         System.out.println();
                     }

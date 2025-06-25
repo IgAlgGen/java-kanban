@@ -81,7 +81,7 @@ class MasterTest {
     void managersShouldReturnInitializedInstances() {
         TaskManager taskManager = Managers.getDefault();
         assertNotNull(taskManager, "TaskManager должен быть инициализирован");
-        assertTrue(taskManager instanceof TaskManager, "TaskManager должен быть экземпляром TaskManager");
+        assertInstanceOf(TaskManager.class, taskManager, "TaskManager должен быть экземпляром TaskManager");
     }
 
     //проверьте, что InMemoryTaskManager действительно добавляет задачи разного типа и может найти их по id;
