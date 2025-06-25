@@ -9,13 +9,13 @@ import java.util.Objects;
 public class Subtask extends Task {
     private final int epicId;
 
-    public Subtask(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration, int epicId ) {
+    public Subtask(int id, String name, String description, Status status, LocalDateTime startTime, Duration duration, int epicId) {
         super(id, name, description, status, startTime, duration);
         this.epicId = epicId;
     }
 
     public Subtask(String name, String description, Status status, LocalDateTime startTime, Duration duration, int epicId) {
-        this(0, name, description, status, startTime, duration, epicId );
+        this(0, name, description, status, startTime, duration, epicId);
     }
 
     public int getEpicId() {
