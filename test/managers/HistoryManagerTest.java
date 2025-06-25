@@ -33,7 +33,7 @@ public class HistoryManagerTest {
     @Test
     void removeFromStart() {
         Task t1 = new Task(0, "H1", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
-        Task t2 = new Task(0, "H2", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
+        Task t2 = new Task(1, "H2", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
         history.add(t1);
         history.add(t2);
         history.remove(t1.getId());
@@ -44,8 +44,8 @@ public class HistoryManagerTest {
     @Test
     void removeFromMiddle() {
         Task t1 = new Task(0, "H1", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
-        Task t2 = new Task(0, "H2", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
-        Task t3 = new Task(0, "H3", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
+        Task t2 = new Task(1, "H2", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
+        Task t3 = new Task(2, "H3", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
         history.add(t1);
         history.add(t2);
         history.add(t3);
@@ -57,7 +57,7 @@ public class HistoryManagerTest {
     @Test
     void removeFromEnd() {
         Task t1 = new Task(0, "H1", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
-        Task t2 = new Task(0, "H2", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
+        Task t2 = new Task(1, "H2", "", Status.NEW, LocalDateTime.now(), Duration.ZERO);
         history.add(t1);
         history.add(t2);
         history.remove(t2.getId());

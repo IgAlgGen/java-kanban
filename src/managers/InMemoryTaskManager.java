@@ -424,7 +424,7 @@ public class InMemoryTaskManager implements TaskManager {
      * Получает список подзадач, связанных с указанным эпиком.<br>
      *
      * @param epicId идентификатор эпика, для которого нужно получить подзадачи
-     * @return  Список подзадач, связанных с указанным эпиком.<br>
+     * @return Список подзадач, связанных с указанным эпиком.<br>
      */
     @Override
     public List<Subtask> getSubtasksOfEpic(int epicId) {

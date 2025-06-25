@@ -1,3 +1,4 @@
+import exeptions.ValidationException;
 import managers.TaskManager;
 import model.Epic;
 import model.Subtask;
@@ -113,11 +114,15 @@ class MasterTest {
     //создайте тест, в котором проверяется неизменность задачи (по всем полям) при добавлении задачи в менеджер
     @Test
     void taskShouldNotChangeWhenAddedToManager() {
-        Task task = new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(90));
-        manager.addTask(task);
+        Task originalTask = new Task("Original Task", "Original Description", Status.NEW, LocalDateTime.of(2025, 3, 1, 10, 0), Duration.ofMinutes(90));
+        manager.addTask(originalTask);
+        Task retrievedTask = manager.getTaskById(originalTask.getId());
 
-        Task retrievedTask = manager.getTaskById(task.getId());
-        assertEquals(task, retrievedTask, "Задача должна оставаться неизменной после добавления в менеджер");
+        assertEquals(originalTask.getName(), retrievedTask.getName(), "Имя задачи должно остаться неизменным");
+        assertEquals(originalTask.getDescription(), retrievedTask.getDescription(), "Описание задачи должно остаться неизменным");
+        assertEquals(originalTask.getStatus(), retrievedTask.getStatus(), "Статус задачи должен остаться неизменным");
+        assertEquals(originalTask.getStartTime(), retrievedTask.getStartTime(), "Время начала задачи должно остаться неизменным");
+        assertEquals(originalTask.getDuration(), retrievedTask.getDuration(), "Продолжительность задачи должна остаться неизменной");
     }
 
 
