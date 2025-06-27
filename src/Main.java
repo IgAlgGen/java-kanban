@@ -16,7 +16,6 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Path filePath = Path.of("tasks.csv");
         TaskManager manager = FileBackedTaskManager.loadFromFile(filePath.toFile());
-        //preparingForFirstStart(manager);
 
         manager.getPrioritizedTasks().forEach(task -> {
             System.out.println(task.getClass().getSimpleName() + " ID: " + task.getId() +
@@ -50,37 +49,60 @@ public class Main {
 
     }
 
-
+    /**
+     * Печатает список задач, эпиков и подзадач.
+     *
+     * @param tasks список задач для печати
+     */
     private static void printList(List<? extends Task> tasks) {
-        if (tasks.isEmpty()) {
+        if (tasks == null || tasks.isEmpty()) {
             System.out.println("Список пуст");
-        } else {
-            for (Task task : tasks) {
-                if (task == null) {
-                    System.out.println("null");
-                } else {
-                    System.out.print(task.getClass().getSimpleName() + " ID: " + task.getId() +
-                            ", Name: " + task.getName() +
-                            ", Description: " + task.getDescription() +
-                            ", Status: " + task.getStatus());
-                    if (task.getStartTime() != null) {
-                        System.out.print(", Start Time: " + task.getStartTime() +
-                                ", Duration: " + task.getDuration());
-                        System.out.println();
+            return;
+        }
 
-                    }
-                    if (task instanceof Epic epic) {
-                        System.out.print("  Subtask IDs: " + epic.getSubtaskIDs());
-                        if (epic.getEndTime() != null) {
-                            System.out.print(", End Time: " + epic.getEndTime());
-                            System.out.println();
-                        }
-                    } else if (task instanceof Subtask subtask) {
-                        System.out.print("  Epic ID: " + subtask.getEpicId());
-                        System.out.println();
-                    }
+        tasks.forEach(task -> {
+            if (task == null) {
+                System.out.println("null");
+            } else {
+                System.out.println(buildTaskLine(task));
+
+                if (task instanceof Epic epic) {
+                    System.out.println("  Subtask IDs: " + epic.getSubtaskIDs() +
+                            optionalField(epic.getEndTime(), ", End Time: %s"));
+                } else if (task instanceof Subtask subtask) {
+                    System.out.println("  Epic ID: " + subtask.getEpicId());
                 }
             }
-        }
+        });
+    }
+
+    /**
+     * Строит строку для вывода информации о задаче.
+     *
+     * @param task задача, для которой строится строка
+     * @return строка с информацией о задаче
+     */
+    private static String buildTaskLine(Task task) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(task.getClass().getSimpleName())
+                .append(" ID: ").append(task.getId())
+                .append(", Name: ").append(task.getName())
+                .append(", Description: ").append(task.getDescription())
+                .append(", Status: ").append(task.getStatus());
+
+        sb.append(optionalField(task.getStartTime(), ", Start Time: %s"));
+        sb.append(optionalField(task.getDuration(), ", Duration: %s"));
+        return sb.toString();
+    }
+
+    /**
+     * Возвращает строку с опциональным полем, если значение не null.
+     *
+     * @param value  значение, которое нужно проверить
+     * @param format формат строки, если значение не null
+     * @return строка с отформатированным значением или пустая строка
+     */
+    private static String optionalField(Object value, String format) {
+        return value != null ? String.format(format, value) : "";
     }
 }
