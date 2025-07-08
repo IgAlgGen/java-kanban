@@ -2,6 +2,7 @@ package server;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
+import exeptions.NotFoundException;
 import managers.TaskManager;
 import model.Subtask;
 import exeptions.ValidationException;
@@ -35,11 +36,7 @@ public class SubtasksHandler extends BaseHttpHandler {
                     } else {
                         int id = Integer.parseInt(query.split("=")[1]);
                         Subtask sub = manager.getSubtaskById(id);
-                        if (sub == null) {
-                            sendNotFound(exchange, "Subtask with id=" + id + " not found");
-                        } else {
-                            sendText(exchange, gson.toJson(sub), 200);
-                        }
+                        sendText(exchange, gson.toJson(sub), 200);
                     }
                 }
                 case "POST" -> {
@@ -66,14 +63,14 @@ public class SubtasksHandler extends BaseHttpHandler {
                     }
                     sendText(exchange, "", 200);
                 }
-                default -> sendServerError(exchange, "Unsupported HTTP method");
+                default -> sendServerError(exchange, "Неподдерживаемый метод HTTP");
             }
-        } catch (NumberFormatException e) {
-            sendNotFound(exchange, "Invalid id format");
-        } catch (RuntimeException e) {
+        } catch (NotFoundException e) {
             sendNotFound(exchange, e.getMessage());
+        } catch (NumberFormatException e) {
+            sendNotFound(exchange, "Неверный формат идентификатора");
         } catch (Exception e) {
-            sendServerError(exchange, "Internal error: " + e.getMessage());
+            sendServerError(exchange, "Внутренняя ошибка:" + e.getMessage());
         }
     }
 }

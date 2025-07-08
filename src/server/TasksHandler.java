@@ -2,6 +2,7 @@ package server;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
+import exeptions.NotFoundException;
 import managers.TaskManager;
 import model.Task;
 import utils.Managers;
@@ -38,11 +39,8 @@ public class TasksHandler extends BaseHttpHandler {
                     } else {
                         int id = Integer.parseInt(query.split("=")[1]);
                         Task task = manager.getTaskById(id);
-                        if (task == null) {
-                            sendNotFound(exchange, "Задача с id =" + id + " не найдено");
-                        } else {
-                            sendText(exchange, gson.toJson(task), 200);
-                        }
+                        sendText(exchange, gson.toJson(task), 200);
+
                     }
                 }
                 case "POST" -> {
@@ -71,11 +69,10 @@ public class TasksHandler extends BaseHttpHandler {
                 }
                 default -> sendServerError(exchange, "Неподдерживаемый метод HTTP");
             }
+        } catch (NotFoundException e) {
+            sendNotFound(exchange, e.getMessage());
         } catch (NumberFormatException e) {
             sendNotFound(exchange, "Неверный формат идентификатора задачи");
-        } catch (RuntimeException e) {
-            // сюда попадут NotFoundException из менеджера и другие unchecked
-            sendNotFound(exchange, e.getMessage());
         } catch (Exception e) {
             sendServerError(exchange, "Внутренняя ошибка:" + e.getMessage());
         }

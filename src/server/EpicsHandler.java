@@ -1,6 +1,7 @@
 package server;
 
 import com.sun.net.httpserver.HttpHandler;
+import exeptions.NotFoundException;
 import managers.TaskManager;
 
 import com.google.gson.Gson;
@@ -38,11 +39,7 @@ public class EpicsHandler extends BaseHttpHandler {
                     } else {
                         int id = Integer.parseInt(query.split("=")[1]);
                         Epic epic = manager.getEpicById(id);
-                        if (epic == null) {
-                            sendNotFound(exchange, "Epic with id=" + id + " not found");
-                        } else {
-                            sendText(exchange, gson.toJson(epic), 200);
-                        }
+                        sendText(exchange, gson.toJson(epic), 200);
                     }
                 }
                 case "POST" -> {
@@ -71,10 +68,10 @@ public class EpicsHandler extends BaseHttpHandler {
                 }
                 default -> sendServerError(exchange, "Unsupported HTTP method");
             }
+        } catch (NotFoundException e) {
+            sendNotFound(exchange, e.getMessage());
         } catch (NumberFormatException e) {
             sendNotFound(exchange, "Invalid id format");
-        } catch (RuntimeException e) {
-            sendNotFound(exchange, e.getMessage());
         } catch (Exception e) {
             sendServerError(exchange, "Internal error: " + e.getMessage());
         }
