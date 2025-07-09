@@ -21,9 +21,9 @@ import java.util.List;
 public class TasksHandler extends BaseHttpHandler {
     private final TaskManager manager;
     private static final Gson gson = new GsonBuilder()
-                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
-                .registerTypeAdapter(Duration.class, new DurationAdapter())
-                .create();
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .registerTypeAdapter(Duration.class, new DurationAdapter())
+            .create();
 
     public TasksHandler(TaskManager manager) {
         this.manager = manager;

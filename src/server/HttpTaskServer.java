@@ -50,6 +50,7 @@ public class HttpTaskServer {
     public void stop() {
         server.stop(0);
     }
+
     public static void main(String[] args) {
         HttpTaskServer httpTaskServer;
         try {
@@ -59,8 +60,8 @@ public class HttpTaskServer {
         } catch (Exception e) {
             System.err.println("Ошибка при запуске HTTP-сервера: " + e.getMessage());
         }
-
     }
+
     static class StubHandler implements HttpHandler {
         private final String message;
 
