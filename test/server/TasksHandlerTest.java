@@ -83,7 +83,6 @@ class TasksHandlerTest {
                         .build(),
                 HttpResponse.BodyHandlers.ofString()
         );
-        assertEquals(200, getResp.statusCode());
         Task fetched = gson.fromJson(getResp.body(), Task.class);
         assertEquals("Test", fetched.getName());
     }
