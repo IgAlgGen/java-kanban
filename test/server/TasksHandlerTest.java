@@ -57,7 +57,7 @@ class TasksHandlerTest {
     @Test
     void createAndGetById() throws Exception {
         // 1. POST новую задачу
-        Task t = new Task(0,"Test", "Description", Status.NEW, LocalDateTime.of(2025,1,1, 10,0), Duration.ofMinutes(30));
+        Task t = new Task("Test", "Description", Status.NEW, LocalDateTime.of(2025,1,1, 10,0), Duration.ofMinutes(30));
         String json = gson.toJson(t);
         HttpRequest post = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(json))
@@ -79,7 +79,7 @@ class TasksHandlerTest {
         HttpResponse<String> getResp = client.send(
                 HttpRequest.newBuilder()
                         .GET()
-                        .uri(URI.create(baseUrl + "?id=0"))
+                        .uri(URI.create(baseUrl + "?id=1"))
                         .build(),
                 HttpResponse.BodyHandlers.ofString()
         );
