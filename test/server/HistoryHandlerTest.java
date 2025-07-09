@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import managers.InMemoryTaskManager;
 import managers.TaskManager;
 import utils.DurationAdapter;
+import utils.IdGenerator;
 import utils.LocalDateTimeAdapter;
 import org.junit.jupiter.api.*;
 
@@ -33,6 +34,7 @@ class HistoryHandlerTest {
         server = new HttpTaskServer(mgr);
         server.start();
         client = HttpClient.newHttpClient();
+        IdGenerator.reset();
     }
 
     @AfterEach

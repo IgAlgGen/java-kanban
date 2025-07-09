@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import model.Task;
 import utils.DurationAdapter;
+import utils.IdGenerator;
 import utils.LocalDateTimeAdapter;
 import utils.Status;
 import managers.InMemoryTaskManager;
@@ -36,6 +37,7 @@ class TasksHandlerTest {
         server = new HttpTaskServer(mgr);
         server.start();
         client = HttpClient.newHttpClient();
+        IdGenerator.reset();
     }
 
     @AfterEach

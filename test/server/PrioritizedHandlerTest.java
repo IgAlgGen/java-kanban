@@ -3,6 +3,7 @@ package server;
 import managers.InMemoryTaskManager;
 import managers.TaskManager;
 import model.Task;
+import utils.IdGenerator;
 import utils.Status;
 import org.junit.jupiter.api.*;
 
@@ -30,6 +31,7 @@ class PrioritizedHandlerTest {
         server = new HttpTaskServer(mgr);
         server.start();
         client = HttpClient.newHttpClient();
+        IdGenerator.reset();
     }
 
     @AfterEach

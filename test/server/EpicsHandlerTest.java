@@ -7,6 +7,7 @@ import managers.InMemoryTaskManager;
 import managers.TaskManager;
 import org.junit.jupiter.api.*;
 import utils.DurationAdapter;
+import utils.IdGenerator;
 import utils.LocalDateTimeAdapter;
 import utils.Status;
 
@@ -36,6 +37,7 @@ class EpicsHandlerTest {
         server = new HttpTaskServer(mgr);
         server.start();
         client = HttpClient.newHttpClient();
+        IdGenerator.reset();
     }
 
     @AfterEach

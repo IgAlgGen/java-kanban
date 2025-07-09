@@ -3,10 +3,7 @@ package server;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import model.Subtask;
-import utils.DurationAdapter;
-import utils.LocalDateTimeAdapter;
-import utils.Status;
-import utils.TaskType;
+import utils.*;
 import managers.InMemoryTaskManager;
 import managers.TaskManager;
 import org.junit.jupiter.api.*;
@@ -37,6 +34,7 @@ class SubtasksHandlerTest {
         server = new HttpTaskServer(mgr);
         server.start();
         client = HttpClient.newHttpClient();
+        IdGenerator.reset();
     }
 
     @AfterEach

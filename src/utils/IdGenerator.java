@@ -15,7 +15,7 @@ public final class IdGenerator {
 
     public static void updateMaxId(int maxId) {
         if (maxId >= nextId.get()) {
-            nextId .set(maxId + 1);
+            nextId.set(maxId + 1);
         }
     }
 
