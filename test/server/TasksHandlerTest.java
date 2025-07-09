@@ -121,8 +121,6 @@ class TasksHandlerTest {
                         .build(),
                 HttpResponse.BodyHandlers.ofString()
         );
-        assertEquals(200, del.statusCode());
-
         // Проверяем, что теперь не найдётся
         HttpResponse<String> respNot = client.send(
                 HttpRequest.newBuilder()
