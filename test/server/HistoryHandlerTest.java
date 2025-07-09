@@ -44,6 +44,7 @@ class HistoryHandlerTest {
     void getHistory() throws Exception {
         TaskManager mgr = new InMemoryTaskManager();
         mgr.addTask(new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(90)));
+        mgr.getTaskById(1);
         HttpResponse<String> resp = client.send(
                 HttpRequest.newBuilder().GET().uri(URI.create(baseUrl)).build(),
                 HttpResponse.BodyHandlers.ofString()
@@ -55,6 +56,9 @@ class HistoryHandlerTest {
 
     @Test
     void queryNotAllowed() throws Exception {
+        TaskManager mgr = new InMemoryTaskManager();
+        mgr.addTask(new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(90)));
+        mgr.getTaskById(1);
         HttpResponse<String> resp = client.send(
                 HttpRequest.newBuilder()
                         .GET()
