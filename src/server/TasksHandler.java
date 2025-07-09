@@ -49,6 +49,7 @@ public class TasksHandler extends BaseHttpHandler {
 
                     }
                 }
+
                 case "POST" -> {
                     InputStream is = exchange.getRequestBody();
                     String body = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -64,6 +65,7 @@ public class TasksHandler extends BaseHttpHandler {
                         sendHasOverlaps(exchange, e.getMessage());
                     }
                 }
+
                 case "DELETE" -> {
                     if (query == null) {
                         manager.removeAllTasks();
