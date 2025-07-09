@@ -1,10 +1,11 @@
 package server;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import managers.InMemoryTaskManager;
 import managers.TaskManager;
-import model.Task;
-import utils.Status;
+import utils.DurationAdapter;
+import utils.LocalDateTimeAdapter;
 import org.junit.jupiter.api.*;
 
 import java.net.URI;
@@ -20,16 +21,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class HistoryHandlerTest {
     private HttpTaskServer server;
     private HttpClient client;
-    private final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .registerTypeAdapter(Duration.class, new DurationAdapter())
+            .create();
     private final String baseUrl = "http://localhost:8080/history";
 
     @BeforeEach
     void setUp() throws Exception {
         TaskManager mgr = new InMemoryTaskManager();
-        // создаём и сразу читаем одну задачу, чтобы история не пуста
-        mgr.addTask(new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(90)));
-        mgr.getTaskById(1);
-
         server = new HttpTaskServer(mgr);
         server.start();
         client = HttpClient.newHttpClient();
@@ -42,9 +42,6 @@ class HistoryHandlerTest {
 
     @Test
     void getHistory() throws Exception {
-        TaskManager mgr = new InMemoryTaskManager();
-        mgr.addTask(new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(90)));
-        mgr.getTaskById(1);
         HttpResponse<String> resp = client.send(
                 HttpRequest.newBuilder().GET().uri(URI.create(baseUrl)).build(),
                 HttpResponse.BodyHandlers.ofString()
@@ -56,13 +53,10 @@ class HistoryHandlerTest {
 
     @Test
     void queryNotAllowed() throws Exception {
-        TaskManager mgr = new InMemoryTaskManager();
-        mgr.addTask(new Task("Task 1", "Description 1", Status.NEW, LocalDateTime.of(2025, 1, 1, 10, 0), Duration.ofMinutes(90)));
-        mgr.getTaskById(1);
         HttpResponse<String> resp = client.send(
                 HttpRequest.newBuilder()
                         .GET()
-                        .uri(URI.create(baseUrl + "?id=1"))
+                        .uri(URI.create(baseUrl + "?id=2"))
                         .build(),
                 HttpResponse.BodyHandlers.ofString()
         );
