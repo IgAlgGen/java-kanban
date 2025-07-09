@@ -1,23 +1,29 @@
 package server;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import exeptions.NotFoundException;
 import managers.TaskManager;
 import model.Task;
-import utils.Managers;
+import utils.DurationAdapter;
+import utils.LocalDateTimeAdapter;
 import exeptions.ValidationException;
-import exeptions.ManagerSaveException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class TasksHandler extends BaseHttpHandler {
     private final TaskManager manager;
-    private final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .registerTypeAdapter(Duration.class, new DurationAdapter())
+                .create();
 
     public TasksHandler(TaskManager manager) {
         this.manager = manager;

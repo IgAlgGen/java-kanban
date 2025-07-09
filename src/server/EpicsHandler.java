@@ -1,24 +1,30 @@
 package server;
 
-import com.sun.net.httpserver.HttpHandler;
+import com.google.gson.GsonBuilder;
 import exeptions.NotFoundException;
 import managers.TaskManager;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import managers.TaskManager;
 import model.Epic;
 import exeptions.ValidationException;
+import utils.DurationAdapter;
+import utils.LocalDateTimeAdapter;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class EpicsHandler extends BaseHttpHandler {
     private final TaskManager manager;
-    private final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .registerTypeAdapter(Duration.class, new DurationAdapter())
+            .create();
 
     public EpicsHandler(TaskManager manager) {
         this.manager = manager;

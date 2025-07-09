@@ -29,12 +29,26 @@ public class HttpTaskServer {
 
         System.out.println("HTTP-сервер запущен на порту " + PORT);
     }
+
+    public HttpTaskServer(TaskManager manager) throws IOException {
+        this.taskManager = manager;
+        server = HttpServer.create(new InetSocketAddress(PORT), 0);
+
+        server.createContext("/tasks", new TasksHandler(taskManager));
+        server.createContext("/subtasks", new SubtasksHandler(taskManager));
+        server.createContext("/epics", new EpicsHandler(taskManager));
+        server.createContext("/history", new HistoryHandler(taskManager));
+        server.createContext("/prioritized", new PrioritizedHandler(taskManager));
+
+        System.out.println("HTTP-сервер запущен на порту " + PORT);
+    }
+
     public void start() {
         server.start();
     }
 
     public void stop() {
-        server.stop(2);
+        server.stop(0);
     }
     public static void main(String[] args) {
         HttpTaskServer httpTaskServer;
