@@ -1,5 +1,6 @@
 package managers;
 
+import exeptions.NotFoundException;
 import exeptions.ValidationException;
 import model.Task;
 import model.Epic;
@@ -61,7 +62,9 @@ public abstract class AbstractTaskManagerTest<T extends TaskManager> {
                 LocalDateTime.now(), Duration.ofMinutes(20));
         manager.addTask(task);
         manager.removeTaskById(task.getId());
-        assertNull(manager.getTaskById(task.getId()), "Задача должна быть удалена и недоступна");
+        assertThrowsExactly(NotFoundException.class,
+                () -> manager.getTaskById(task.getId()),
+                "Удаленная задача должна вызывать исключение при попытке доступа");
     }
 
     // Epic status calculations

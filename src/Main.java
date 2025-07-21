@@ -15,7 +15,8 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         Path filePath = Path.of("tasks.csv");
-        TaskManager manager = FileBackedTaskManager.loadFromFile(filePath.toFile());
+        TaskManager manager = new FileBackedTaskManager(filePath.toFile());
+        preparingForFirstStart(manager);
 
         manager.getPrioritizedTasks().forEach(task -> {
             System.out.println(task.getClass().getSimpleName() + " ID: " + task.getId() +
@@ -34,7 +35,7 @@ public class Main {
 
     }
 
-    private static void preparingForFirstStart(TaskManager manager) {
+    public static void preparingForFirstStart(TaskManager manager) {
         System.out.println("!" + "_".repeat(20) + "Test TaskManager" + "_" + "!".repeat(20));
         System.out.println("Создание менеджера задач");
         System.out.println("Добавление задач в менеджер");
